@@ -1,7 +1,7 @@
 import mne
 
-BCIC_dir = "F:\\BCICdatasets"
-mne_path = "F:\\mne_data"
+BCIC_dir = "E:\\workspace\\bcitest\\BCICdatasets"
+mne_path = "E:\\workspace\\bcitest\\mne_data"
 
 mne.set_config("MNE_DATA", mne_path)
 mne.set_config("MNE_DATASETS_ALEXEEG_PATH", mne_path)

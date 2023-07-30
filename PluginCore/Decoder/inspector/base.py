@@ -173,7 +173,7 @@ class InspectorStandard():
                 y_one_hot = label_binarize(y_true, np.arange(self.n_classes+1))
                 y_one_hot = np.delete(y_one_hot,-1,axis=1)
             else:
-                y_one_hot = label_binarize(y_true, np.arange(self.n_classes))
+                y_one_hot = label_binarize(y_true, classes=np.arange(self.n_classes))
             if self.parameters['pr_average'] == 'micro':
                 p_curve, r_curve, th_pr = precision_recall_curve(y_one_hot.ravel(), y_logit.ravel())
                 average_precision = average_precision_score(y_one_hot, y_logit, average='micro')

@@ -105,7 +105,7 @@ class FBCSPSearch(BaseEstimator, ClassifierMixin):
         self.mask = None
 
     def fit(self, X, y):
-        X = X.numpy().astype(np.float)
+        X = X.numpy().astype(np.float64)
         y = y.numpy()
 
         features = np.zeros((X.shape[0], self.n_cuts, self.csp_kwargs['n_components']))
@@ -115,11 +115,17 @@ class FBCSPSearch(BaseEstimator, ClassifierMixin):
 
             self.csps[i].fit(bp_data, y)
             feature = self.csps[i].transform(bp_data)
-            features[:, i, :] = feature
+            try:
+                features[:, i, :] = feature
+            except:
+                aa = 1
         features = flatten(features)
         k = int(self.n_cuts * self.csp_kwargs['n_components'] * self.select_ratio)
 
-        filter = SelectKBest(mutual_info_classif, k)
+        try:
+            filter = SelectKBest(mutual_info_classif, k)
+        except:
+            aa = 1
         filter.fit(features, y)
         self.mask = filter._get_support_mask()
         features = filter.transform(features)

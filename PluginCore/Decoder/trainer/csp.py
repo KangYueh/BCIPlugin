@@ -16,7 +16,7 @@ class CSPFactory():
 
     def train(self, train_X, train_y, model, log_dir=None, save_name=None, max_epochs=None, verbose=True):
         try:
-            train_X = train_X.numpy().astype(np.float)
+            train_X = train_X.numpy().astype(np.float64)
             train_y = train_y.numpy()
         except:
             pass

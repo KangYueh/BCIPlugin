@@ -1,5 +1,5 @@
 from skorch.callbacks import EarlyStopping,GradientNormClipping,LRScheduler,TensorBoard
-from torch.optim.lr_scheduler import *
+from torch.optim.lr_scheduler import CosineAnnealingLR
 from skorch.classifier import NeuralNetClassifier
 import tensorboardX
 import torch

@@ -7,7 +7,7 @@ class CSPInspector(Inspector):
 
     def inspect(self, test_X, test_y, model):
         try:
-            test_X = test_X.numpy().astype(np.float)
+            test_X = test_X.numpy().astype(np.float64)
             test_y = test_y.numpy()
         except:
             pass

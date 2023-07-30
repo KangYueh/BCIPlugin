@@ -1,17 +1,17 @@
 import os.path
 import pickle
 import time
-from datetime import datetime
+from copy import deepcopy
 
-from tqdm import tqdm
 import mne
 import numpy as np
 import pandas as pd
-from copy import deepcopy
+from tqdm import tqdm
 
+from Paradigm.base import SynParadigm
 from PluginCore.Datasets.base import fetch_data_description, WindowsDataset
-from Paradigm.base import SynParadigm,Result
 from bGUI.pluginWindow import WinMICalibrate
+
 
 def load_MITrials_from_raw(raw, event_id, trial_start_offset_seconds, trial_length_seconds):
     # TODO: change to using the functionns in windowers, since we need a uniform API
@@ -33,11 +33,11 @@ class MICalibrateParadigm(SynParadigm):
         SynParadigm.__init__(self, BCIServer=BCIServer)
         self.init_config(config)
         self.running_param = {
-            'i_session':-1,
-            'i_run':-1,
-            'i_trial':-1,
-            'is_Listening':False,
-            'stream_id':-1,
+            'i_session': -1,
+            'i_run': -1,
+            'i_trial': -1,
+            'is_Listening': False,
+            'stream_id': -1,
         }
         self.log_func = log_func
         self.MITrials = []
@@ -58,19 +58,19 @@ class MICalibrateParadigm(SynParadigm):
         delay = 1
         pbar = tqdm(total=10)
 
-        self.BCIServer.broadcastCmd('Cmd_MICalibrate_SetNSession_'+str(self.config['n_session']))
+        self.BCIServer.broadcastCmd('Cmd_MICalibrate_SetNSession_' + str(self.config['n_session']))
         time.sleep(delay)
         pbar.update(1)
 
-        self.BCIServer.broadcastCmd('Cmd_MICalibrate_SetNRun_'+str(self.config['n_run']))
+        self.BCIServer.broadcastCmd('Cmd_MICalibrate_SetNRun_' + str(self.config['n_run']))
         time.sleep(delay)
         pbar.update(1)
 
-        self.BCIServer.broadcastCmd('Cmd_MICalibrate_SetNTrial_'+str(self.config['n_trial']))
+        self.BCIServer.broadcastCmd('Cmd_MICalibrate_SetNTrial_' + str(self.config['n_trial']))
         time.sleep(delay)
         pbar.update(1)
 
-        self.BCIServer.broadcastCmd('Cmd_MICalibrate_SetTrialLength_'+str(self.config['TrialLength']))
+        self.BCIServer.broadcastCmd('Cmd_MICalibrate_SetTrialLength_' + str(self.config['TrialLength']))
         time.sleep(delay)
         pbar.update(1)
 
@@ -111,17 +111,17 @@ class MICalibrateParadigm(SynParadigm):
 
     def init_config(self, config):
         default_config = {
-            'n_session':-1,
-            'n_run':-1,
-            'n_trial':-1,
-            'DataPeriod':-1,
-            'TrialLength':-1,
-            'LeftHand':False,
-            'RightHand':False,
-            'Rest':False,
-            'LeftFoot':False,
-            'RightFoot':False,
-            'Tongue':False
+            'n_session': -1,
+            'n_run': -1,
+            'n_trial': -1,
+            'DataPeriod': -1,
+            'TrialLength': -1,
+            'LeftHand': False,
+            'RightHand': False,
+            'Rest': False,
+            'LeftFoot': False,
+            'RightFoot': False,
+            'Tongue': False
         }
         if config is None:
             self.config = default_config
@@ -137,15 +137,15 @@ class MICalibrateParadigm(SynParadigm):
 
     def createDataset(self, trial_start, trial_length, subject_id, info):
         arr = np.stack([t for t, _ in self.MITrials])
-        labels = np.array([l for _,l in self.MITrials],dtype=np.int)
+        labels = np.array([l for _, l in self.MITrials], dtype=np.int)
         events = np.zeros((len(self.MITrials), 3), dtype=np.int)
 
         classes = np.unique(labels)
         class_map = {}
-        for i,c in enumerate(classes):
+        for i, c in enumerate(classes):
             class_map[c] = i
 
-        for i,l in enumerate(labels):
+        for i, l in enumerate(labels):
             labels[i] = class_map[l]
 
         events[:, 1] = trial_length
@@ -180,41 +180,41 @@ class MICalibrateParadigm(SynParadigm):
         data['inverse_class_map'] = inverse_class_map
 
         with open(pth, 'wb') as f:
-            pickle.dump(data,f)
+            pickle.dump(data, f)
 
     def EventHandler(self, type):
-        if type=='session start':
+        if type == 'session start':
             self.running_param['i_session'] += 1
             self.running_param['i_run'] = -1
             self.running_param['i_trial'] = -1
-            self.log_func('Session '+str(self.running_param['i_session'])+' Start')
+            self.log_func('Session ' + str(self.running_param['i_session']) + ' Start')
 
-        if type=='session end':
-            self.log_func('Session '+str(self.running_param['i_session']+1)+' End')
+        if type == 'session end':
+            self.log_func('Session ' + str(self.running_param['i_session'] + 1) + ' End')
 
-        if type=='run start':
+        if type == 'run start':
             self.running_param['i_run'] += 1
             self.running_param['i_trial'] = -1
-            self.log_func('Run '+str(self.running_param['i_run']+1)+' Start')
+            self.log_func('Run ' + str(self.running_param['i_run'] + 1) + ' Start')
 
-        if type=='run end':
-            self.log_func('Run '+str(self.running_param['i_run']+1)+' End')
+        if type == 'run end':
+            self.log_func('Run ' + str(self.running_param['i_run'] + 1) + ' End')
 
-        if type=='trial start':
+        if type == 'trial start':
             self.running_param['i_trial'] += 1
-            self.log_func('Trial '+str(self.running_param['i_trial']+1)+' Start')
+            self.log_func('Trial ' + str(self.running_param['i_trial'] + 1) + ' Start')
 
-        if type=='trial end':
-            self.log_func('Trial '+str(self.running_param['i_trial']+1)+' End')
+        if type == 'trial end':
+            self.log_func('Trial ' + str(self.running_param['i_trial'] + 1) + ' End')
 
-        if type=='record data':
+        if type == 'record data':
             self.log_func('MI Calibration Paradigm: Recording data...')
 
             stream_id = self.running_param['stream_id']
             dataPeriod = self.config['DataPeriod']
             data = self.BCIServer.streamClients[stream_id].Buffer.getData(dataPeriod=dataPeriod)
             y = self.BCIServer.valueService.values['MIstate']
-            self.MITrials.append((deepcopy(data),y))
+            self.MITrials.append((deepcopy(data), y))
 
     def startListening(self):
         self.BCIServer.eventService.typeChangedHandler.update({'MICalibrate': self.EventHandler})
@@ -224,5 +224,3 @@ class MICalibrateParadigm(SynParadigm):
         if self.running_param['is_Listening']:
             self.BCIServer.eventService.typeChangedHandler.pop('MICalibrate')
             self.running_param['is_Listening'] = False
-
-

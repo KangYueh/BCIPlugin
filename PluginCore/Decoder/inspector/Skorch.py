@@ -12,7 +12,7 @@ class SkorchInspector(Inspector):
             test_X = test_X.cuda()
             test_y = test_y.cuda()
 
-        y_true = test_y.cpu()
+        y_true = test_y.cpu().tolist()
         y_pred = model.predict(test_X)
         y_logit = module(test_X).detach().cpu()
         re = self.inspector.inspect(y_true,y_pred,y_logit)
