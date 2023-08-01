@@ -22,11 +22,13 @@ def boxplot_res(df, interest_keys, gs=None):
         sns.boxplot(x='param_' + interest_keys[0], y='mean_test_score', data=df)
     else:
         sns.boxplot(x='param_' + interest_keys[0], y='mean_test_score', hue='param_' + interest_keys[1], data=df)
+    plt.show()
 
 
 def plot_res( gs, interest_key):
     df = return_df_search(gs, [interest_key])
     plt.plot(df['param_' + interest_key], df['mean_test_score'], '.')
+    plt.show()
 
 
 def param3d_viz(gs, params, score_name='mean_test_score'):
@@ -54,3 +56,4 @@ def param3d_viz(gs, params, score_name='mean_test_score'):
     ax.set_xlabel(params[0])
     ax.set_ylabel(params[1])
     ax.set_zlabel(params[2])
+    plt.show()

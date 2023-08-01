@@ -18,6 +18,7 @@ from PluginCore.Decoder.trainer.utils import boxplot_res, param3d_viz, return_df
 from PluginCore.Processor.base import Processor
 from PluginCore.Processor.module.temp import exponential_moving_standardize, convert_to_uV
 from PluginCore.base import PluginCore
+import matplotlib.pyplot as plt
 
 i_moabb_dataset = 1
 i_subject = 1
@@ -75,7 +76,7 @@ ispt = {
 # Define Core and start training
 core = PluginCore(datasets=datasets,algorithms=alg,preprocess=preps,inspectors=ispt)
 # core.save_core(file_dir=file_dir,file_name=start_savename)
-core.load_core_from_file('.\\data\\Train_Model_public_ds\\CoreModelCompare.pkl')
+core.load_core_from_file('.\\data\\Train_Model_public_ds\\CoreModelStart.pkl')
 
 #______________________________________________Model Search and Inspect_________________________________________________
 params_fbcsp = {
@@ -85,7 +86,7 @@ params_fbcsp = {
     'window_length':[1000],
     'l_freq':[4],
     'select_ratio':[0.2, 0.4, 0.6, 0.8],
-    'h_freq':[20, 30, 40],
+    'h_freq':[40],
     'n_cuts':[5,10]
 }
 
@@ -100,45 +101,45 @@ params_cnn = {
     'module__drop_prob':[0.2,0.4,0.6]
 }
 
-train_csp = False
-if train_csp:
-    fbcsp_search = FBCSPSearch(sfreq=250,time_steps=1000,window_start=0,window_length=1000,select_ratio=0.6,l_freq=4,h_freq=38,n_cuts=10)
-    gs_fbcsp = core.search_model(preprocesser_id=2,algorithm_id=5,dataset_id=1,model=fbcsp_search,params=params_fbcsp,
-                           subject_mode='subject_dependent',trial_start_offset_seconds=0,trial_end_offset_seconds=0)
-
-else:
-    cnn = ShallowFBCSPNet(in_chans=22,n_classes=4,input_window_samples=200,final_conv_length='auto',n_filters_spat=50,n_filters_time=50)
-    gs_cnn = core.search_model(preprocesser_id=1,algorithm_id=3,dataset_id=1,model=cnn,params=params_cnn,
-                           subject_mode='subject_dependent',trial_start_offset_seconds=0,trial_end_offset_seconds=0)
+train_csp = True
+# if train_csp:
+#     fbcsp_search = FBCSPSearch(sfreq=250,time_steps=1000,window_start=0,window_length=1000,select_ratio=0.4,l_freq=4,h_freq=40,n_cuts=8)
+#     gs_fbcsp = core.search_model(preprocesser_id=2,algorithm_id=5,dataset_id=1,model=fbcsp_search,params=params_fbcsp,
+#                            subject_mode='subject_dependent',trial_start_offset_seconds=0,trial_end_offset_seconds=0)
+#
+# else:
+#     cnn = ShallowFBCSPNet(in_chans=22,n_classes=4,input_window_samples=200,final_conv_length='auto',n_filters_spat=50,n_filters_time=50)
+#     gs_cnn = core.search_model(preprocesser_id=1,algorithm_id=3,dataset_id=1,model=cnn,params=params_cnn,
+#                            subject_mode='subject_dependent',trial_start_offset_seconds=0,trial_end_offset_seconds=0)
 
 #Inspect
-if train_csp:
-    df_search = return_df_search(gs_fbcsp, ['select_ratio','h_freq','n_cuts'])
-    boxplot_res(df=df_search, interest_keys=['select_ratio'])
-    boxplot_res(df=df_search, interest_keys=['h_freq'])
-    boxplot_res(df=df_search, interest_keys=['n_cuts'])
-    param3d_viz(gs=gs_fbcsp, params=['select_ratio','h_freq','n_cuts'])
-    core.log_model_search(gs=gs_fbcsp,  keys=['select_ratio','h_freq','n_cuts'], dir=file_dir)
-else:
-    df_search = return_df_search(gs_cnn, ['module__n_filters_time','module__n_filters_spat','module_drop_prob'])
-    boxplot_res(df=df_search, interest_keys=['module_drop_prob'])
-    boxplot_res(df=df_search, interest_keys=['module__n_filters_time'])
-    boxplot_res(df=df_search, interest_keys=['module__n_filters_spat'])
-    param3d_viz(gs=gs_cnn, params=['module__n_filters_time','module__n_filters_spat','module_drop_prob'])
-    core.log_model_search(gs=gs_cnn, keys=['module__n_filters_time','module__n_filters_spat','module_drop_prob'], dir=file_dir)
+# if train_csp:
+#     df_search = return_df_search(gs_fbcsp, ['select_ratio','h_freq','n_cuts'])
+#     boxplot_res(df=df_search, interest_keys=['select_ratio'])
+#     boxplot_res(df=df_search, interest_keys=['h_freq'])
+#     boxplot_res(df=df_search, interest_keys=['n_cuts'])
+#     param3d_viz(gs=gs_fbcsp, params=['select_ratio','h_freq','n_cuts'])
+#     core.log_model_search(gs=gs_fbcsp,  keys=['select_ratio','h_freq','n_cuts'], dir=file_dir)
+# else:
+#     df_search = return_df_search(gs_cnn, ['module__n_filters_time','module__n_filters_spat','module__drop_prob'])
+#     boxplot_res(df=df_search, interest_keys=['module__drop_prob'])
+#     boxplot_res(df=df_search, interest_keys=['module__n_filters_time'])
+#     boxplot_res(df=df_search, interest_keys=['module__n_filters_spat'])
+#     param3d_viz(gs=gs_cnn, params=['module__n_filters_time','module__n_filters_spat','module__drop_prob'])
+#     core.log_model_search(gs=gs_cnn, keys=['module__n_filters_time','module__n_filters_spat','module_drop_prob'], dir=file_dir)
 
 
 
 
 #________________________________________________Model Train and Inspect________________________________________________
-fbcsp = FBCSP(sfreq=250,time_steps=1000,window_start=0,window_length=1000,clf=SVC(probability=True),select_ratio=0.8,l_freq=4,h_freq=30,n_cuts=10)
+fbcsp = FBCSP(sfreq=250,time_steps=1000,window_start=0,window_length=1000,clf=SVC(probability=True),select_ratio=0.4,l_freq=4,h_freq=40,n_cuts=8)
 re_subjects_fbcsp_train, trainned_model_subjects_fbcsp_train, df_subjects_fbcsp_train = core.run_cv_subject_dependent(preprocesser_id=2,algorithm_id=2,inspector_id=2,n_fold=5,
                                                                            model=fbcsp,trial_start_offset_seconds=0,trial_end_offset_seconds=0,
                                                                 model_name='FBCSP',metrics=['acc','kappa','model','subject'])
 
 #Inspect
 sns.boxplot(x='model',y='acc',data=df_subjects_fbcsp_train)
-
+plt.show()
 i_trained_module = 1
 core.modules['trained_module'] = trainned_model_subjects_fbcsp_train[i_trained_module]
 
@@ -159,7 +160,7 @@ core.save_core(file_dir=file_dir,file_name=train_savename)
 
 
 #___________________________________________ Feature Anaysis & Visulization_____________________________________________
-_module =  FBCSP(sfreq=250,time_steps=1000,window_start=0,window_length=1000,clf=SVC(probability=True),select_ratio=0.8,l_freq=4,h_freq=30,n_cuts=10)
+_module =  FBCSP(sfreq=250,time_steps=1000,window_start=0,window_length=1000,clf=SVC(probability=True),select_ratio=0.4,l_freq=4,h_freq=30,n_cuts=10)
 
 # Evaluate specific time_interval's discriminative power
 temporal_res = core.feature_analysis_wrapper(preprocess_id=2,algorithm_id=7,dataset_id=1,subject_mode='subject_dependent',

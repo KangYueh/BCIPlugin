@@ -108,6 +108,9 @@ class FBCSPSearch(BaseEstimator, ClassifierMixin):
         X = X.numpy().astype(np.float64)
         y = y.numpy()
 
+        # define the classes attributes just like _logistic.py in scikit did
+        self.classes_ = np.unique(y)
+
         features = np.zeros((X.shape[0], self.n_cuts, self.csp_kwargs['n_components']))
         for i, (l_freq, h_freq) in enumerate(self.filter_bank):
             bp_data = filter_data(X, sfreq=self.sfreq, l_freq=l_freq, h_freq=h_freq)
@@ -123,7 +126,7 @@ class FBCSPSearch(BaseEstimator, ClassifierMixin):
         k = int(self.n_cuts * self.csp_kwargs['n_components'] * self.select_ratio)
 
         try:
-            filter = SelectKBest(mutual_info_classif, k)
+            filter = SelectKBest(score_func=mutual_info_classif, k=k)
         except:
             aa = 1
         filter.fit(features, y)
@@ -133,7 +136,7 @@ class FBCSPSearch(BaseEstimator, ClassifierMixin):
         self.clf.fit(features, y)
 
     def transform(self,X):
-        X = X.numpy().astype(np.float)
+        X = X.numpy().astype(np.float64)
 
         features = np.zeros((X.shape[0], self.n_cuts, self.csp_kwargs['n_components']))
         for i, (l_freq, h_freq) in enumerate(self.filter_bank):
@@ -158,7 +161,7 @@ class FBCSPSearch(BaseEstimator, ClassifierMixin):
         return pred
 
     def score(self, X, y, sample_weight=None):
-        X = X.numpy().astype(np.float)
+        X = X.numpy().astype(np.float64)
         y = y.numpy()
 
         acc = accuracy_score(y, self.predict(X))

@@ -99,8 +99,8 @@ class CSPFilter():
         classes_train = np.unique(train_y)
         legends = ['train_' + str(c) for c in classes_train]
 
-        train_X = train_X.numpy().astype(np.float)
-        test_X = test_X.numpy().astype(np.float)
+        train_X = train_X.numpy().astype(np.float64)
+        test_X = test_X.numpy().astype(np.float64)
 
         train_f = self.model.transform(train_X)
         test_f = self.model.transform(test_X)
@@ -118,13 +118,13 @@ class CSPFilter():
         tsne_visualize(all_feature,idxs,legends)
 
     def track_time(self, all_X, all_y, n_inter):
-        time_idxs = np.linspace(0, len(all_X), n_inter + 1, dtype=np.int)
+        time_idxs = np.linspace(0, len(all_X), n_inter + 1, dtype=np.int_)
         time_code = list(range(n_inter))
         y_idxs = np.zeros_like(all_y)
         for i, _ in enumerate(time_idxs[:-1]):
             y_idxs[time_idxs[i]:time_idxs[i + 1]] = time_code[i]
 
-        all_feature = self.model.transform(all_X.numpy().astype(np.float))
+        all_feature = self.model.transform(all_X.numpy().astype(np.float64))
         tsne_visualize(all_feature, [np.ones(all_feature.shape[0])==1], legends=None, colors=y_idxs)
 
 class CSPWrapper():
@@ -165,5 +165,4 @@ class CSPWrapper():
         spat_acc = np.array(spat_acc)
         pos = np.array([(c['loc'][0], c['loc'][1]) for c in info['chs']])
 
-        mne.viz.plot_topomap(data=spat_acc, pos=pos,
-                             show_names=True, names=info['ch_names'])
+        mne.viz.plot_topomap(data=spat_acc, pos=pos, show=True, names=info['ch_names'])
