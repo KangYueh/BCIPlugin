@@ -33,7 +33,6 @@ class EEGBuffer():
 
         self.mutex.release()
         return data
-
     def putData(self, dataList):
         self.mutex.acquire()
 
