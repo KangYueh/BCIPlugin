@@ -1,5 +1,6 @@
 from abc import ABCMeta, abstractmethod
 
+
 class EEGDecoder(metaclass=ABCMeta):
     @abstractmethod
     def train(self, **kwargs):
@@ -18,8 +19,3 @@ class Inspector(metaclass=ABCMeta):
     @abstractmethod
     def inspect(self, **kwargs):
         pass
-
-
-
-
-

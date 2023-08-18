@@ -1,5 +1,6 @@
-from PluginCore.Decoder.base import Inspector
+from bciplugin.Core.Decoder.base import Inspector
 import numpy as np
+
 
 class CSPInspector(Inspector):
     def __init__(self, inspector):

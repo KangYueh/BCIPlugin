@@ -1,4 +1,5 @@
-from PluginCore.Decoder.base import Inspector
+from bciplugin.Core.Decoder.base import Inspector
+
 
 class SkorchInspector(Inspector):
     def __init__(self, inspector, cuda):
@@ -15,6 +16,5 @@ class SkorchInspector(Inspector):
         y_true = test_y.cpu().tolist()
         y_pred = model.predict(test_X)
         y_logit = module(test_X).detach().cpu()
-        re = self.inspector.inspect(y_true,y_pred,y_logit)
+        re = self.inspector.inspect(y_true, y_pred, y_logit)
         return re
-

@@ -1,5 +1,5 @@
 import numpy as np
-from StreamClient.Curry.utils import *
+from bciplugin.StreamClient.Curry.utils import *
 
 CurryChannelTypes = {
     0: 'eeg',

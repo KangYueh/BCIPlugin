@@ -1,7 +1,7 @@
 from sklearn.feature_selection import RFE
 
-from PluginCore.Decoder.module.CSP.FBCSP import FilterBankCSP
-from PluginCore.Decoder.module.CSP.base import CSPBase
+from bciplugin.Core.Decoder.module.CSP.FBCSP import FilterBankCSP
+from bciplugin.Core.Decoder.module.CSP.base import CSPBase
 
 class SBCSP(CSPBase):
     def __init__(self, sfreq, time_steps, window_start, window_length, clf,

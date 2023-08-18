@@ -4,10 +4,10 @@ import matplotlib.pyplot as plt
 import mne
 import numpy as np
 
-from StreamClient.Curry.CurryProtocol import *
-from StreamClient.buffer import EEGBuffer
-from StreamClient.vis import StreamWindow
-from StreamClient.record import StreamRecorder
+from bciplugin.StreamClient.Curry.CurryProtocol import *
+from bciplugin.StreamClient.buffer import EEGBuffer
+from bciplugin.StreamClient.vis import StreamWindow
+from bciplugin.StreamClient.record import StreamRecorder
 
 
 def isContinues(container):

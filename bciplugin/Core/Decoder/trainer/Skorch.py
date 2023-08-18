@@ -1,4 +1,4 @@
-from skorch.callbacks import EarlyStopping,GradientNormClipping,LRScheduler,TensorBoard
+from skorch.callbacks import EarlyStopping, GradientNormClipping, LRScheduler, TensorBoard
 from torch.optim.lr_scheduler import CosineAnnealingLR
 from skorch.classifier import NeuralNetClassifier
 import tensorboardX
@@ -6,15 +6,16 @@ import torch
 import pickle
 from copy import deepcopy
 from torch import nn
-from sklearn.model_selection import GridSearchCV,RandomizedSearchCV
+from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib
 
+
 class SkorchFactory():
-    def __init__(self,Model,**kwargs):
+    def __init__(self, Model, **kwargs):
         self.Model = Model
 
         self.gradient_norm_clipping = GradientNormClipping(gradient_clip_value=1e-3)
@@ -40,7 +41,6 @@ class SkorchFactory():
         if 'es_patience' in kwargs.keys():
             self.patience = kwargs['es_patience']
 
-
         self.early_stopping = EarlyStopping(monitor='valid_loss', patience=self.patience, threshold=1e-5)
 
     def compile(self, model):
@@ -61,14 +61,14 @@ class SkorchFactory():
         )
         return Trainner
 
-    def train(self, train_X, train_y, model,  log_dir=r'runs', save_name=None, verbose=True):
+    def train(self, train_X, train_y, model, log_dir=r'runs', save_name=None, verbose=True):
         Trainner = self.compile(model)
 
         Trainner.warm_start = True
         Trainner.max_epochs = self.max_epochs
         Trainner.verbose = verbose
 
-        Trainner.fit(train_X,train_y)
+        Trainner.fit(train_X, train_y)
 
         if save_name is not None:
             with open(save_name, 'wb') as f:
@@ -94,13 +94,14 @@ class SkorchFactory():
         else:
             return torch.sum(torch.argmax(module(test_X), dim=1) == test_y) / len(test_y)
 
-    def train_finetune(self, train_X, train_y, little_X, little_y,  model, log_dir=r'runs', save_name=None, verbose=True):
+    def train_finetune(self, train_X, train_y, little_X, little_y, model, log_dir=r'runs', save_name=None,
+                       verbose=True):
         model_ori = self.train(train_X=train_X, train_y=train_y, model=model, log_dir=log_dir,
                                save_name=save_name, verbose=verbose)
 
         model_trans = deepcopy(model_ori)
         model_trans = self.train(train_X=little_X, train_y=little_y, model=model_trans.module, log_dir=log_dir,
-                               save_name=save_name, verbose=verbose)
+                                 save_name=save_name, verbose=verbose)
         return model_ori, model_trans
 
     def voting(self, models, n_classes, X, weights=None):
@@ -128,8 +129,8 @@ class SkorchFactory():
 
 
 class SkorchRandSearch(SkorchFactory):
-    def __init__(self,Model,**kwargs):
-        super(SkorchRandSearch, self).__init__(Model=Model,**kwargs)
+    def __init__(self, Model, **kwargs):
+        super(SkorchRandSearch, self).__init__(Model=Model, **kwargs)
         if 'n_iter' in kwargs.keys():
             self.n_iter = kwargs['n_iter']
         else:
@@ -162,10 +163,9 @@ class SkorchRandSearch(SkorchFactory):
         return gs
 
 
-
 class SkorchGridSearch(SkorchFactory):
-    def __init__(self,Model,**kwargs):
-        super(SkorchGridSearch, self).__init__(Model=Model,**kwargs)
+    def __init__(self, Model, **kwargs):
+        super(SkorchGridSearch, self).__init__(Model=Model, **kwargs)
 
     def compile(self, model):
         Trainner = NeuralNetClassifier(
@@ -186,7 +186,7 @@ class SkorchGridSearch(SkorchFactory):
         )
         return Trainner
 
-    def search(self,params,model,verbose=False):
+    def search(self, params, model, verbose=False):
         Trainner = self.compile(model)
         Trainner.verbose = verbose
 
@@ -201,5 +201,3 @@ class SkorchGridSearch(SkorchFactory):
         metrics.append('mean_test_score')
         df = pd.DataFrame({key: value for (key, value) in data.items() if key in metrics})
         return df
-
-

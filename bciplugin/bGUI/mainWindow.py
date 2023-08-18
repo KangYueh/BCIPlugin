@@ -2,14 +2,15 @@ import sys
 import time
 
 from PyQt5 import uic
-from PyQt5.Qt import QWidget,QThread,QFileDialog
+from PyQt5.Qt import QWidget, QThread, QFileDialog
 
 from bciplugin.StreamClient.Curry.base import CurryClient
-from Paradigm.MI.MICalibrate import MICalibrateParadigm
+from bciplugin.Paradigm.MI.MICalibrate import MICalibrateParadigm
 
 ui_filepath = r'.\bGUI\mainWindow.ui'
 
-#TODO:用来做耗时的操作
+
+# TODO:用来做耗时的操作
 class WindowThread(QThread):
     def __init__(self):
         super(WindowThread, self).__init__()
@@ -18,7 +19,7 @@ class WindowThread(QThread):
         pass
 
 
-class BCIplugWindow(QWidget):
+class BCIPlugWindow(QWidget):
     def __init__(self, BCIServer):
         super(BCIplugWindow, self).__init__()
 
@@ -63,7 +64,6 @@ class BCIplugWindow(QWidget):
         self.listPC_inspectors = self.ui.listInspector
         self.listPC_processers = self.ui.listProcessor
 
-
         self.plainTextLog = self.ui.plainTextLog
 
         self.listValue = self.ui.listValue
@@ -90,27 +90,23 @@ class BCIplugWindow(QWidget):
 
         self.listPC_datasets.clear()
         for k in datasets:
-            self.listPC_datasets.addItem(str(k)+': '+str(datasets[k].__class__))
+            self.listPC_datasets.addItem(str(k) + ': ' + str(datasets[k].__class__))
 
         self.listPC_algorithms.clear()
         for k in algorithms:
-            self.listPC_algorithms.addItem(str(k)+': '+str(algorithms[k].__class__))
+            self.listPC_algorithms.addItem(str(k) + ': ' + str(algorithms[k].__class__))
 
         self.listPC_modules.clear()
         for k in modules:
-            self.listPC_modules.addItem(str(k)+': '+str(modules[k].__class__))
+            self.listPC_modules.addItem(str(k) + ': ' + str(modules[k].__class__))
 
         self.listPC_inspectors.clear()
         for k in inspectors:
-            self.listPC_inspectors.addItem(str(k)+': '+str(inspectors[k].__class__))
+            self.listPC_inspectors.addItem(str(k) + ': ' + str(inspectors[k].__class__))
 
         self.listPC_processers.clear()
         for k in processors:
-            self.listPC_processers.addItem(str(k)+': '+str(processors[k].__class__))
-
-
-
-
+            self.listPC_processers.addItem(str(k) + ': ' + str(processors[k].__class__))
 
     def updateStrParadigms(self):
         cur_keys = list(self.BCIServer.paradigms.keys())
@@ -134,7 +130,7 @@ class BCIplugWindow(QWidget):
         self.listValue.clear()
         values = self.BCIServer.valueService.values
         for k in values:
-            self.listValue.addItem(k+': '+str(values[k]))
+            self.listValue.addItem(k + ': ' + str(values[k]))
 
     def loadResult(self):
         filepath = QFileDialog.getOpenFileName(self, '选择文件', '', 'Excel files(*.csv , *.xls)')
@@ -151,7 +147,6 @@ class BCIplugWindow(QWidget):
         cur_key = str(self.listViewStreamClients.currentItem().data(0))
         self.BCIServer.streamClients[cur_key].startStreaming()
 
-
     def addCurry8StreamClient(self):
         curryClient = CurryClient()
         assert (self.BCIServer is not None), print('Run BCI Server first..')
@@ -165,7 +160,7 @@ class BCIplugWindow(QWidget):
 
     def addMICalibrateParadigm(self):
         assert (self.BCIServer is not None), print('Run BCI Server first..')
-        MIparadigm = MICalibrateParadigm(BCIServer=self.BCIServer,log_func=self.log)
+        MIparadigm = MICalibrateParadigm(BCIServer=self.BCIServer, log_func=self.log)
         self.BCIServer.loadParadigm(MIparadigm)
         self.updateStrParadigms()
 

@@ -6,8 +6,8 @@ from skorch.classifier import NeuralNet
 from skorch.classifier import NeuralNetClassifier
 from skorch.utils import train_loss_score, valid_loss_score, noop, to_numpy
 
-from PluginCore.Decoder.module.braindecode.core.scoring import PostEpochTrainScoring, CroppedTrialEpochScoring
-from PluginCore.Decoder.module.braindecode.core.util import update_estimator_docstring,ThrowAwayIndexLoader
+from bciplugin.Core.Decoder.module.braindecode.core.scoring import PostEpochTrainScoring, CroppedTrialEpochScoring
+from bciplugin.Core.Decoder.module.braindecode.core.util import update_estimator_docstring, ThrowAwayIndexLoader
 
 
 class EEGClassifier(NeuralNetClassifier):
@@ -66,7 +66,7 @@ class EEGClassifier(NeuralNetClassifier):
                     assert scoring_name.endswith(
                         ('_score', '_error', '_deviance', '_loss'))
                     if (scoring_name.endswith('_score') or
-                        callback.startswith('neg_')):
+                            callback.startswith('neg_')):
                         lower_is_better = False
                     else:
                         lower_is_better = True
@@ -136,7 +136,7 @@ class EEGClassifier(NeuralNetClassifier):
             epoch_cbs = []
             for name, cb in cbs:
                 if (cb.__class__.__name__ == 'CroppedTrialEpochScoring') and (
-                    hasattr(cb, 'window_inds_')) and (cb.on_train == False):
+                        hasattr(cb, 'window_inds_')) and (cb.on_train == False):
                     epoch_cbs.append(cb)
             # for trialwise decoding stuffs it might also be we don't have
             # cropped loader, so no indices there

@@ -3,15 +3,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 from copy import deepcopy
 import torch
-from sklearn.model_selection import GridSearchCV,RandomizedSearchCV
+from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 import mne
 
-from PluginCore.Decoder.ml import tsne_visualize
-from PluginCore.Decoder.base import EEGDecoder
+from bciplugin.Core.Decoder.ml import tsne_visualize
+from bciplugin.Core.Decoder.base import EEGDecoder
 
 
 class CSPFactory():
-    def __init__(self,Model):
+    def __init__(self, Model):
         self.Model = Model
 
     def train(self, train_X, train_y, model, log_dir=None, save_name=None, max_epochs=None, verbose=True):
@@ -21,7 +21,7 @@ class CSPFactory():
         except:
             pass
 
-        model.fit(train_X,train_y)
+        model.fit(train_X, train_y)
         if save_name is not None:
             with open(save_name, 'wb') as f:
                 pickle.dump(model, f)
@@ -34,7 +34,7 @@ class CSPFactory():
         except:
             pass
 
-        return model.score(test_X,test_y)
+        return model.score(test_X, test_y)
 
     def predict(self, model, test_X):
         try:
@@ -64,7 +64,7 @@ class CSPFactory():
 
         preds = []
         for i_model, model in enumerate(models):
-            preds.append(self.predict(model,X))
+            preds.append(self.predict(model, X))
 
         pred_out = torch.zeros([X.shape[0], n_classes])
         for j, pred in enumerate(preds):
@@ -74,6 +74,7 @@ class CSPFactory():
         pred_out = torch.argmax(pred_out, dim=1)
         return pred_out
 
+
 class CSPRandomSearch():
     def __init__(self, Model, **kwargs):
         if 'n_iter' in kwargs.keys():
@@ -82,9 +83,9 @@ class CSPRandomSearch():
             self.n_iter = 4
 
     def search(self, params, model, verbose=False):
-        gs = RandomizedSearchCV(estimator=model, param_distributions=params, n_iter=self.n_iter, refit=False, cv=3, scoring='accuracy', verbose=4)
+        gs = RandomizedSearchCV(estimator=model, param_distributions=params, n_iter=self.n_iter, refit=False, cv=3,
+                                scoring='accuracy', verbose=4)
         return gs
-
 
 
 class CSPFilter():
@@ -108,14 +109,14 @@ class CSPFilter():
         BigNum = 100
         test_y += BigNum
         classes_test = np.unique(test_y)
-        legends.extend(['test_' + str(c-BigNum) for c in classes_test])
+        legends.extend(['test_' + str(c - BigNum) for c in classes_test])
 
         all_classes = np.concatenate([classes_train, classes_test])
         all_feature = np.concatenate([train_f, test_f])
         all_y = np.concatenate([train_y, test_y])
 
-        idxs = [all_y==i for i in all_classes]
-        tsne_visualize(all_feature,idxs,legends)
+        idxs = [all_y == i for i in all_classes]
+        tsne_visualize(all_feature, idxs, legends)
 
     def track_time(self, all_X, all_y, n_inter):
         time_idxs = np.linspace(0, len(all_X), n_inter + 1, dtype=np.int_)
@@ -125,10 +126,11 @@ class CSPFilter():
             y_idxs[time_idxs[i]:time_idxs[i + 1]] = time_code[i]
 
         all_feature = self.model.transform(all_X.numpy().astype(np.float64))
-        tsne_visualize(all_feature, [np.ones(all_feature.shape[0])==1], legends=None, colors=y_idxs)
+        tsne_visualize(all_feature, [np.ones(all_feature.shape[0]) == 1], legends=None, colors=y_idxs)
+
 
 class CSPWrapper():
-    def __init__(self,train_factory, inspector_factory):
+    def __init__(self, train_factory, inspector_factory):
         self.train_factory = train_factory
         self.inspector_factory = inspector_factory
 
@@ -140,9 +142,9 @@ class CSPWrapper():
         return sub_model
 
     def train(self, model, train_X, train_y, channels, time_interval):
-        train_X = train_X[:,channels,time_interval[0]:time_interval[1]]
+        train_X = train_X[:, channels, time_interval[0]:time_interval[1]]
 
-        ans = self.train_factory.train(train_X=train_X,train_y=train_y,model=model)
+        ans = self.train_factory.train(train_X=train_X, train_y=train_y, model=model)
         return ans
 
     def inspect(self, test_X, test_y, model, channels, time_interval):
@@ -152,7 +154,7 @@ class CSPWrapper():
         return re
 
     def plot_metric(self, res, metric):
-        #TODO:make time interval actually following time sequence
+        # TODO:make time interval actually following time sequence
         re_wrappers = [re[0] for re in res]
         time_interval_wrappers = [re[2] for re in res]
 

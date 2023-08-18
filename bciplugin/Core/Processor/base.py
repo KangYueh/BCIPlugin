@@ -2,29 +2,33 @@ from collections.abc import Iterable
 from functools import partial
 import mne
 
+
 class DumbSet():
     def __init__(self):
         self.raw = None
         self.windows = None
+
 
 class ArrayPreprocessMaker():
     def __init__(self):
         self.datasets = []
         self.datasets.append(DumbSet())
 
-    def make_array_processer(self,data,info):
-        if data.ndim==3:
-            self.datasets[0].windows = mne.EpochsArray(data=data,info=info)
-        elif data.ndim==2:
-            self.datasets[0].raw = mne.io.RawArray(data=data,info=info)
+    def make_array_processer(self, data, info):
+        if data.ndim == 3:
+            self.datasets[0].windows = mne.EpochsArray(data=data, info=info)
+        elif data.ndim == 2:
+            self.datasets[0].raw = mne.io.RawArray(data=data, info=info)
         return self
 
     def get_data(self):
-        assert (self.datasets[0].raw is None and self.datasets[0].windows is not None) or (self.datasets[0].raw is not None and self.datasets[0].windows is None)
+        assert (self.datasets[0].raw is None and self.datasets[0].windows is not None) or (
+                    self.datasets[0].raw is not None and self.datasets[0].windows is None)
         if self.datasets[0].raw is not None:
             return self.datasets[0].raw.get_data()
         if self.datasets[0].windows is not None:
             return self.datasets[0].windows.get_data()
+
 
 class Processor(object):
     """Preprocessor for an MNE Raw or Epochs object.
@@ -51,6 +55,7 @@ class Processor(object):
     kwargs:
         Keyword arguments to be forwarded to the MNE function.
     """
+
     def __init__(self, fn, apply_on_array=True, **kwargs):
         if callable(fn) and apply_on_array:
             channel_wise = kwargs.pop('channel_wise', False)
@@ -81,7 +86,8 @@ class Processor(object):
                     f'MNE object does not have a {self.fn} method.')
             getattr(raw_or_epochs, self.fn)(**self.kwargs)
 
-def preprocess(concat_ds, preprocessors, apply_on_array=False,info=None):
+
+def preprocess(concat_ds, preprocessors, apply_on_array=False, info=None):
     """Apply preprocessors to a concat dataset or array data
 
     Parameters
@@ -125,6 +131,7 @@ def preprocess(concat_ds, preprocessors, apply_on_array=False,info=None):
     #      a property of BaseConcatDataset.
 
     concat_ds.cumulative_sizes = concat_ds.cumsum(concat_ds.datasets)
+
 
 def _preprocess(raw_or_epochs, preprocessors):
     """Apply preprocessor(s) to Raw or Epochs object.

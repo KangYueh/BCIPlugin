@@ -4,7 +4,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from mne.stats import permutation_cluster_1samp_test as pcluster_test
-from mne.viz.utils import center_cmap
 from copy import deepcopy
 
 def get_EpochsTF(epochs, want_chs, tmin, tmax,  l_freq=2, h_freq=36
@@ -61,7 +60,6 @@ def draw_band_EpochsTF(tfr_df, want_chs, vmin=-1.5, vmax_ratio=3):
 
 
 def draw_p_test_EpochsTF(tfr, want_chs, event_ids, vmin=-1.5, vmax=6):
-    cmap = center_cmap(plt.cm.RdBu, vmin, vmax)  # zero maps to white
     kwargs = dict(n_permutations=100, step_down_p=0.05, seed=1,
                   buffer_size=None, out_type='mask')  # for cluster test
     n_chan = len(want_chs)
@@ -90,7 +88,7 @@ def draw_p_test_EpochsTF(tfr, want_chs, event_ids, vmin=-1.5, vmax=6):
             mask = c[..., p <= 0.05].any(axis=-1)
 
             # plot TFR (ERDS map with masking)
-            tfr_ev.average().plot([ch], vmin=vmin, vmax=vmax, cmap=(cmap, False),
+            tfr_ev.average().plot([ch], vmin=vmin, vmax=vmax, cmap='RdBu',
                                   axes=ax, colorbar=False, show=False, mask=mask,
                                   mask_style="mask")
 

@@ -3,7 +3,8 @@ import scipy.signal
 import numpy as np
 from warnings import warn
 
-def HighpassCnt(data, low_cut_hz, fs, filt_order=8, axis=0):
+
+def highpass_cnt(data, low_cut_hz, fs, filt_order=8, axis=0):
     """
      Highpass signal applying **causal** butterworth filter of given order.
 
@@ -27,20 +28,23 @@ def HighpassCnt(data, low_cut_hz, fs, filt_order=8, axis=0):
         filt_order, low_cut_hz / (fs / 2.0), btype="highpass"
     )
     assert filter_is_stable(a)
-    data_highpassed = scipy.signal.lfilter(b, a, data, axis=axis)
-    return data_highpassed
+    data_high_passed = scipy.signal.lfilter(b, a, data, axis=axis)
+    return data_high_passed
 
-def LowpassCnt(data, high_cut_hz, fs, filt_order=8, axis=0):
+
+def low_pass_cnt(data, high_cut_hz, fs, filter_order=8, axis=0):
     """
      Lowpass signal applying **causal** butterworth filter of given order.
 
     Parameters
     ----------
+    axis: (int)
+
     data: 2d-array
         Time x channels
     high_cut_hz: float
     fs: float
-    filt_order: int
+    filter_order: int
 
     Returns
     -------
@@ -51,26 +55,28 @@ def LowpassCnt(data, high_cut_hz, fs, filt_order=8, axis=0):
         'Not doing any lowpass, since high cut hz is None or nyquist freq.'
         return data.copy()
     b, a = scipy.signal.butter(
-        filt_order, high_cut_hz / (fs / 2.0), btype="lowpass"
+        filter_order, high_cut_hz / (fs / 2.0), btype="lowpass"
     )
     assert filter_is_stable(a)
     data_lowpassed = scipy.signal.lfilter(b, a, data, axis=axis)
     return data_lowpassed
 
-def BandpassCnt(
-        data, low_cut_hz, high_cut_hz, fs, filt_order=8, axis=0, filtfilt=False
+
+def band_pass_cnt(
+        data, low_cut_hz, high_cut_hz, fs, filter_order=8, axis=0, filtfilt=False
 ):
     """
      Bandpass signal applying **causal** butterworth filter of given order.
     Can be used as low-pass / high-pass filters by setting low_cut_hz=0 / high_cut_hz=None or Nyquist
     Parameters
     ----------
+    axis
     data: 2d-array
         Time x channels
     low_cut_hz: float
     high_cut_hz: float
     fs: float
-    filt_order: int
+    filter_order: int
     filtfilt: bool
         Whether to use filtfilt instead of lfilter
 
@@ -86,25 +92,26 @@ def BandpassCnt(
         return data.copy()
     if low_cut_hz == 0 or low_cut_hz == None:
         print('Using lowpass filter since low cut hz is 0 or None')
-        return LowpassCnt(
-            data, high_cut_hz, fs, filt_order=filt_order, axis=axis
+        return low_pass_cnt(
+            data, high_cut_hz, fs, filter_order=filter_order, axis=axis
         )
     if high_cut_hz == None or high_cut_hz == (fs / 2.0):
         print('Using highpass filter since high cut hz is None or nyquist freq')
-        return HighpassCnt(
-            data, low_cut_hz, fs, filt_order=filt_order, axis=axis
+        return highpass_cnt(
+            data, low_cut_hz, fs, filt_order=filter_order, axis=axis
         )
 
     nyq_freq = 0.5 * fs
     low = low_cut_hz / nyq_freq
     high = high_cut_hz / nyq_freq
-    b, a = scipy.signal.butter(filt_order, [low, high], btype="bandpass")
+    b, a = scipy.signal.butter(filter_order, [low, high], btype="bandpass")
     assert filter_is_stable(a), 'Filter should be stable...'
     if filtfilt:
         data_bandpassed = scipy.signal.filtfilt(b, a, data, axis=axis)
     else:
         data_bandpassed = scipy.signal.lfilter(b, a, data, axis=axis)
     return data_bandpassed
+
 
 def filter_is_stable(a):
     """
@@ -135,6 +142,7 @@ def filter_is_stable(a):
     )
     # from http://stackoverflow.com/a/8812737/1469195
     return np.all(np.abs(np.roots(a)) < 1)
+
 
 def filterbank(raw, frequency_bands, drop_original_signals=True,
                order_by_frequency_band=False, **mne_filter_kwargs):

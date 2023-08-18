@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib
 
+
 def return_df_search(searcher, keys):
     data = searcher.cv_results_
     metrics = []
@@ -25,7 +26,7 @@ def boxplot_res(df, interest_keys, gs=None):
     plt.show()
 
 
-def plot_res( gs, interest_key):
+def plot_res(gs, interest_key):
     df = return_df_search(gs, [interest_key])
     plt.plot(df['param_' + interest_key], df['mean_test_score'], '.')
     plt.show()

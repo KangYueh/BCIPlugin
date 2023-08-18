@@ -4,15 +4,18 @@ import torch.nn.functional as F
 from torch.autograd import Function
 from torch.nn import init
 
+
 class GRL(Function):
     @staticmethod
-    def forward(ctx,input):
+    def forward(ctx, input):
         ctx.save_for_backward(input)
         return input
+
     @staticmethod
-    def backward(ctx,grad_output):
+    def backward(ctx, grad_output):
         grad_input = grad_output.neg()
         return grad_input
+
 
 class CDANExtractor(nn.Module):
     def __init__(self, n_chan, time_steps):
@@ -34,17 +37,17 @@ class CDANExtractor(nn.Module):
         )
 
         self.SpatialConvLayer = nn.Sequential(
-            nn.Conv2d(in_channels=1, out_channels=dim_feature, kernel_size=(n_project_feature,1)),
+            nn.Conv2d(in_channels=1, out_channels=dim_feature, kernel_size=(n_project_feature, 1)),
             nn.Dropout(),
             nn.BatchNorm2d(num_features=dim_feature),
-            nn.MaxPool2d(kernel_size=(1,3)),
+            nn.MaxPool2d(kernel_size=(1, 3)),
             nn.ELU()
         )
 
-        self.DensePreConv = nn.Conv2d(in_channels=dim_feature,out_channels=dim_feature,kernel_size=(1,1))
+        self.DensePreConv = nn.Conv2d(in_channels=dim_feature, out_channels=dim_feature, kernel_size=(1, 1))
         self.DensePostConv = nn.Sequential(
-            nn.Conv2d(in_channels=dim_feature,out_channels=dim_feature,kernel_size=(1,11)),
-            nn.MaxPool2d(kernel_size=(1,3))
+            nn.Conv2d(in_channels=dim_feature, out_channels=dim_feature, kernel_size=(1, 11)),
+            nn.MaxPool2d(kernel_size=(1, 3))
         )
 
     def ForwardFeature(self, x):
@@ -61,32 +64,34 @@ class CDANExtractor(nn.Module):
         feature = feature.clone() + self.DensePreConv(feature)
         feature = self.DensePostConv(feature)
 
-        feature = torch.reshape(feature,(b_s,-1))
+        feature = torch.reshape(feature, (b_s, -1))
         return feature
 
     def forward(self, x):
         feature = self.ForwardFeature(x)
         return feature
 
+
 class CDANClassifier(nn.Module):
     def __init__(self, dim_feature, n_class):
         super(CDANClassifier, self).__init__()
-        self.clf = nn.Linear(in_features=dim_feature,out_features=n_class)
+        self.clf = nn.Linear(in_features=dim_feature, out_features=n_class)
         init.xavier_uniform_(self.clf.weight, gain=1)
         init.constant_(self.clf.bias, 0)
 
     def forward(self, x):
         logits = self.clf(x)
-        pred = F.softmax(logits,dim=1)
+        pred = F.softmax(logits, dim=1)
         return pred
+
 
 class Discriminator(nn.Module):
     def __init__(self, dim_feature):
         super(Discriminator, self).__init__()
         self.grl = GRL()
         self.discriminator = nn.Sequential(
-            nn.Linear(in_features=dim_feature,out_features=128),
-            nn.Linear(in_features=128,out_features=2),
+            nn.Linear(in_features=dim_feature, out_features=128),
+            nn.Linear(in_features=128, out_features=2),
             nn.Sigmoid()
         )
         init.xavier_uniform_(self.discriminator[0].weight, gain=1)
@@ -105,6 +110,7 @@ class Discriminator(nn.Module):
         init.xavier_uniform_(self.discriminator[1].weight, gain=1)
         init.constant_(self.discriminator[1].bias, 0)
 
+
 class CDAN(nn.Module):
     def __init__(self, extractor, clf):
         super(CDAN, self).__init__()
@@ -115,6 +121,7 @@ class CDAN(nn.Module):
         feature = self.extractor(x)
         logits = self.clf(feature)
         return logits
+
 
 def kronecker_product(mat1, mat2):
     # 在pytorch1.7版本之后，torch.ger就被torch.outer所代替了

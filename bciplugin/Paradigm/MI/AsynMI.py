@@ -1,20 +1,21 @@
 import time
 
 import numpy as np
-from threading import Thread,Timer
+from threading import Thread, Timer
 from copy import deepcopy
 
-from Paradigm.base import AsynParadigm
+from bciplugin.Paradigm.base import AsynParadigm
 from tqdm import tqdm
+
 
 class AsynMIParadigm(AsynParadigm):
     def __init__(self, BCIServer, preprocess, trainned_model, inverse_class_map=None,
-                  log_func=print, dataPeriod=4):
+                 log_func=print, dataPeriod=4):
         AsynParadigm.__init__(self, BCIServer=BCIServer)
         self.running_param = {
-            'DataPeriod':dataPeriod,
-            'stream_id':-1,
-            'client_id':-1,
+            'DataPeriod': dataPeriod,
+            'stream_id': -1,
+            'client_id': -1,
         }
         self.log_func = log_func
         self.ConfigWindow = None
@@ -38,7 +39,7 @@ class AsynMIParadigm(AsynParadigm):
             dataPeriod = self.running_param['DataPeriod']
             client_id = self.running_param['client_id']
             data = self.BCIServer.streamClients[stream_id].Buffer.getData(dataPeriod=dataPeriod)
-            data = np.expand_dims(data,axis=0)
+            data = np.expand_dims(data, axis=0)
             if self.preprocess is not None:
                 data = self.preprocess.preprocess(data)
             y = self.trainned_model.predict(data)[0]
@@ -48,7 +49,5 @@ class AsynMIParadigm(AsynParadigm):
             else:
                 state = self.inverse_class_map[int(y)]
             self.BCIServer.valueService.SetValue('MIstate', state)
-            self.BCIServer.valueService.UpdateValue(name='MIstate', value=state, conn=self.BCIServer.appClients[client_id])
-
-
-
+            self.BCIServer.valueService.UpdateValue(name='MIstate', value=state,
+                                                    conn=self.BCIServer.appClients[client_id])

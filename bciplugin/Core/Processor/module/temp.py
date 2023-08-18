@@ -1,8 +1,10 @@
 import numpy as np
 import pandas as pd
 
-def convert_to_uV(x):
-    return x*1e6
+
+def convert_to_uv(x):
+    return x * 1e6
+
 
 def exponential_moving_standardize(
         data, factor_new=0.001, init_block_size=None, eps=1e-4
@@ -33,11 +35,11 @@ def exponential_moving_standardize(
     standardized: np.ndarray (n_channels, n_times)
         Standardized data.
     """
-    if data.ndim==3:
+    if data.ndim == 3:
         res = np.ones_like(data)
         for i_sample in range(len(data)):
             res[i_sample] = exponential_moving_standardize(data[i_sample], factor_new=factor_new,
-                                                           init_block_size=init_block_size,eps=eps)
+                                                           init_block_size=init_block_size, eps=eps)
         return res
 
     data = data.T
@@ -57,9 +59,10 @@ def exponential_moving_standardize(
             data[0:init_block_size], axis=i_time_axis, keepdims=True
         )
         init_block_standardized = (
-            data[0:init_block_size] - init_mean) / np.maximum(eps, init_std)
+                                          data[0:init_block_size] - init_mean) / np.maximum(eps, init_std)
         standardized[0:init_block_size] = init_block_standardized
     return standardized.T
+
 
 def exponential_moving_demean(data, factor_new=0.001, init_block_size=None):
     r"""Perform exponential moving demeanining.
@@ -83,11 +86,11 @@ def exponential_moving_demean(data, factor_new=0.001, init_block_size=None):
     demeaned: np.ndarray (n_channels, n_times)
         Demeaned data.
     """
-    if data.ndim==3:
+    if data.ndim == 3:
         res = np.ones_like(data)
         for i_sample in range(len(data)):
             res[i_sample] = exponential_moving_demean(data[i_sample], factor_new=factor_new,
-                                                           init_block_size=init_block_size)
+                                                      init_block_size=init_block_size)
         return res
     data = data.T
     df = pd.DataFrame(data)
@@ -101,6 +104,7 @@ def exponential_moving_demean(data, factor_new=0.001, init_block_size=None):
         )
         demeaned[0:init_block_size] = data[0:init_block_size] - init_mean
     return demeaned.T
+
 
 def zscore(data):
     """Zscore normalize continuous or windowed data in-place.
@@ -127,6 +131,7 @@ def zscore(data):
     if hasattr(data, '_data'):
         data._data = zscored
     return zscored
+
 
 def scale(data, factor):
     """Scale continuous or windowed data in-place

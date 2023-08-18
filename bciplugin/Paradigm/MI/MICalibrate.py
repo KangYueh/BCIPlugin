@@ -8,9 +8,9 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-from Paradigm.base import SynParadigm
-from PluginCore.Datasets.base import fetch_data_description, WindowsDataset
-from bGUI.pluginWindow import WinMICalibrate
+from bciplugin.Paradigm.base import SynParadigm
+from bciplugin.Core.Datasets.base import fetch_data_description, WindowsDataset
+from bciplugin.bGUI.pluginWindow import WinMICalibrate
 
 
 def load_MITrials_from_raw(raw, event_id, trial_start_offset_seconds, trial_length_seconds):

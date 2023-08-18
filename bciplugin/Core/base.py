@@ -4,23 +4,22 @@ import numpy as np
 import torch
 from sklearn.model_selection import KFold
 import random
-from abc import ABCMeta,abstractmethod
+from abc import ABCMeta, abstractmethod
 from datetime import datetime
 import os
 import pandas as pd
 
-from PluginCore.Processor.base import preprocess,_preprocess
-from PluginCore.Datasets.utils.windowers import create_windows_from_events
-from PluginCore.Datasets.utils.Xy import X_y_from_Dataset,X_from_Dataset,X_y_ID_from_Dataset
-from PluginCore.Datasets.base import BaseConcatDataset,SubjectIDDataset
-from PluginCore.Datasets.moabb import get_dataset_rest_stated
-from PluginCore.Decoder.trainer.utils import return_df_search
-
+from bciplugin.Core.Processor.base import preprocess, _preprocess
+from bciplugin.Core.Datasets.utils.windowers import create_windows_from_events
+from bciplugin.Core.Datasets.utils.Xy import X_y_from_Dataset, X_from_Dataset, X_y_ID_from_Dataset
+from bciplugin.Core.Datasets.base import BaseConcatDataset, SubjectIDDataset
+from bciplugin.Core.Datasets.moabb import get_dataset_rest_stated
+from bciplugin.Core.Decoder.trainer.utils import return_df_search
 
 
 class PluginCore():
-    def __init__(self,preprocess,algorithms,datasets,inspectors=None,modules={}):
-        self.preprocess = preprocess
+    def __init__(self, preprocess_t, algorithms, datasets, inspectors=None, modules={}):
+        self.preprocess = preprocess_t
         self.algorithms = algorithms
         self.datasets = datasets
         self.inspectors = inspectors
@@ -48,17 +47,17 @@ class PluginCore():
                 'Can not pass multiple subjects dataset if using subject-independent')
 
         if subject_mode in ['subject_transfer_unlabel', 'subject_transfer']:
-            if train_mode=='hold_out':
+            if train_mode == 'hold_out':
                 assert train_subjects is not None
                 assert test_subject is not None
 
         if subject_mode is 'subject_transfer_label':
-            if train_mode=='hold_out':
+            if train_mode == 'hold_out':
                 assert test_subject is not None
 
-    def provide_Xys(self,dataset_id,preprocess_id,subject_mode,train_mode,trial_start_offset_seconds,
-                    trial_end_offset_seconds,train_r,n_fold,
-                    train_subjects=None,valid_subjects=None,test_subject=None,direct_window=False):
+    def provide_Xys(self, dataset_id, preprocess_id, subject_mode, train_mode, trial_start_offset_seconds,
+                    trial_end_offset_seconds, train_r, n_fold,
+                    train_subjects=None, valid_subjects=None, test_subject=None, direct_window=False):
         """
         From inner dataset provide X-y pair for machine learning models, based on training mode
         :param dataset_id:
@@ -80,13 +79,15 @@ class PluginCore():
             _preprocess(dataset.windows, self.preprocess[preprocess_id])
         else:
             preprocess(dataset, self.preprocess[preprocess_id])
-        return self._provide_Xys(dataset=dataset,subject_mode=subject_mode,train_mode=train_mode,trial_start_offset_seconds=trial_start_offset_seconds,
-                    trial_end_offset_seconds=trial_end_offset_seconds,train_r=train_r,n_fold=n_fold,
-                    train_subjects=train_subjects,valid_subjects=valid_subjects,test_subject=test_subject,direct_window=direct_window)
+        return self._provide_Xys(dataset=dataset, subject_mode=subject_mode, train_mode=train_mode,
+                                 trial_start_offset_seconds=trial_start_offset_seconds,
+                                 trial_end_offset_seconds=trial_end_offset_seconds, train_r=train_r, n_fold=n_fold,
+                                 train_subjects=train_subjects, valid_subjects=valid_subjects,
+                                 test_subject=test_subject, direct_window=direct_window)
 
-    def _provide_Xys(self,dataset,subject_mode,train_mode,trial_start_offset_seconds,
-                    trial_end_offset_seconds,train_r,n_fold,
-                    train_subjects=None,valid_subjects=None,test_subject=None,
+    def _provide_Xys(self, dataset, subject_mode, train_mode, trial_start_offset_seconds,
+                     trial_end_offset_seconds, train_r, n_fold,
+                     train_subjects=None, valid_subjects=None, test_subject=None,
                      direct_window=False):
 
         if direct_window:
@@ -119,13 +120,13 @@ class PluginCore():
                 train_X, train_y = X_y_from_Dataset(train_set)
                 test_X, test_y = X_y_from_Dataset(test_set)
 
-                return (train_X,train_y),(test_X,test_y)
+                return (train_X, train_y), (test_X, test_y)
 
             elif train_mode is 'cross_validation':
                 all_X, all_y = X_y_from_Dataset(windows_dataset)
                 kfold = KFold(n_splits=n_fold, shuffle=False)
 
-                train_Xs,train_ys,test_Xs,test_ys = [],[],[],[]
+                train_Xs, train_ys, test_Xs, test_ys = [], [], [], []
 
                 for i_cv, (train_idx, test_idx) in enumerate(kfold.split(all_X, all_y)):
                     train_X, train_y = all_X[train_idx], all_y[train_idx]
@@ -134,7 +135,7 @@ class PluginCore():
                     train_ys.append(train_y)
                     test_Xs.append(valid_X)
                     test_ys.append(valid_y)
-                return (train_Xs,train_ys),(test_Xs,test_ys)
+                return (train_Xs, train_ys), (test_Xs, test_ys)
 
             elif train_mode is 'nested_cross_validation':
                 all_X, all_y = X_y_from_Dataset(windows_dataset)
@@ -165,7 +166,7 @@ class PluginCore():
                     test_Xs.append(test_Xs_inner)
                     test_ys.append(test_ys_inner)
 
-                return (train_Xs,train_ys),(valid_Xs,valid_ys),(test_Xs,test_ys)
+                return (train_Xs, train_ys), (valid_Xs, valid_ys), (test_Xs, test_ys)
 
         if subject_mode is 'subject_transfer_label':
             assert (direct_window is False), print("direct window on this mode not implemented")
@@ -184,7 +185,7 @@ class PluginCore():
 
                 train_X, train_y = X_y_from_Dataset(train_set)
                 test_X, test_y = X_y_from_Dataset(test_set)
-                return (train_X,train_y), (test_X, test_y)
+                return (train_X, train_y), (test_X, test_y)
 
         if subject_mode in ['subject_transfer']:
             assert (direct_window is False), print("direct window on this mode not implemented")
@@ -206,10 +207,10 @@ class PluginCore():
                 )
                 train_X, train_y = X_y_from_Dataset(train_set)
 
-                return (train_X,train_y),(test_X,test_y)
+                return (train_X, train_y), (test_X, test_y)
 
             elif train_mode is 'cross_validation':
-                train_Xs,train_ys,test_Xs,test_ys = [],[],[],[]
+                train_Xs, train_ys, test_Xs, test_ys = [], [], [], []
 
                 subjects = np.unique([str(s) for s in dataset.description['subject']])
                 subjects = list(subjects)
@@ -241,7 +242,7 @@ class PluginCore():
                     test_Xs.append(test_X)
                     test_ys.append(test_y)
 
-                return (train_Xs,train_ys),(test_Xs,test_ys),subjects
+                return (train_Xs, train_ys), (test_Xs, test_ys), subjects
 
     def _provide_Xs(self, dataset, window_seconds):
 
@@ -258,28 +259,28 @@ class PluginCore():
             preload=True,
         )
 
-        rest_X = X_from_Dataset(windows_dataset,shuffle=False)
+        rest_X = X_from_Dataset(windows_dataset, shuffle=False)
 
         return rest_X
 
     def provide_Xs(self, dataset_id, preprocess_id, subject_ids, window_seconds):
         dataset = deepcopy(self.datasets[dataset_id])
-        preprocess(dataset,self.preprocess[preprocess_id])
+        preprocess(dataset, self.preprocess[preprocess_id])
         rest_state_dataset = get_dataset_rest_stated(dataset)
-
 
         dataset_split = rest_state_dataset.split('subject')
         target_dataset = BaseConcatDataset([dataset_split[d] for d in dataset_split if int(d) in subject_ids])
 
-        return self._provide_Xs(dataset=target_dataset,window_seconds=window_seconds)
+        return self._provide_Xs(dataset=target_dataset, window_seconds=window_seconds)
 
     def set_random_seed_for_train(self, seed):
         np.random.seed(seed)
         random.seed(seed)
 
     def search_model(self, preprocesser_id, algorithm_id, dataset_id, model, params, subject_mode,
-                     trial_start_offset_seconds,trial_end_offset_seconds, seed=2022, verbose=False, direct_window=False):
-        assert subject_mode in ['subject_dependent','subject_independent_random']
+                     trial_start_offset_seconds, trial_end_offset_seconds, seed=2022, verbose=False,
+                     direct_window=False):
+        assert subject_mode in ['subject_dependent', 'subject_independent_random']
         dataset = deepcopy(self.datasets[dataset_id])
         if direct_window:
             _preprocess(dataset.windows, self.preprocess[preprocesser_id])
@@ -288,10 +289,10 @@ class PluginCore():
         self.set_random_seed_for_train(seed)
 
         (all_X, all_y), _ = self._provide_Xys(dataset=dataset, subject_mode=subject_mode,
-                                                                train_mode='hold_out', direct_window=direct_window,
-                                                                trial_start_offset_seconds=trial_start_offset_seconds,
-                                                                trial_end_offset_seconds=trial_end_offset_seconds,
-                                                                train_r=0.99, n_fold=None)
+                                              train_mode='hold_out', direct_window=direct_window,
+                                              trial_start_offset_seconds=trial_start_offset_seconds,
+                                              trial_end_offset_seconds=trial_end_offset_seconds,
+                                              train_r=0.99, n_fold=None)
 
         searcher = self.algorithms[algorithm_id]
         gs = searcher.search(params=params, model=model, verbose=verbose)
@@ -300,8 +301,10 @@ class PluginCore():
         return gs
 
     def train_model(self, preprocesser_id, algorithm_id, dataset_id, model,
-                    subject_mode, train_mode, trial_start_offset_seconds,trial_end_offset_seconds,train_r,n_fold,seed=2022,verbose=True,
-                    train_subjects=None,valid_subjects=None,test_subject=None,score_on_train=False, direct_window=False,
+                    subject_mode, train_mode, trial_start_offset_seconds, trial_end_offset_seconds, train_r, n_fold,
+                    seed=2022, verbose=True,
+                    train_subjects=None, valid_subjects=None, test_subject=None, score_on_train=False,
+                    direct_window=False,
                     rest_state_window_seconds=None):
         dataset = deepcopy(self.datasets[dataset_id])
         if direct_window:
@@ -313,12 +316,18 @@ class PluginCore():
                               train_subjects=train_subjects, valid_subjects=valid_subjects, test_subject=test_subject)
         self.set_random_seed_for_train(seed)
 
-        if subject_mode in ['subject_dependent','subject_independent_random']:
+        if subject_mode in ['subject_dependent', 'subject_independent_random']:
 
             if train_mode is 'hold_out':
-                (train_X,train_y),(test_X,test_y) = self._provide_Xys(dataset=dataset,subject_mode=subject_mode,train_mode=train_mode,
-                    trial_start_offset_seconds=trial_start_offset_seconds,trial_end_offset_seconds=trial_end_offset_seconds,train_r=train_r,n_fold=n_fold,
-                    train_subjects=train_subjects,valid_subjects=valid_subjects,test_subject=test_subject,direct_window=direct_window)
+                (train_X, train_y), (test_X, test_y) = self._provide_Xys(dataset=dataset, subject_mode=subject_mode,
+                                                                         train_mode=train_mode,
+                                                                         trial_start_offset_seconds=trial_start_offset_seconds,
+                                                                         trial_end_offset_seconds=trial_end_offset_seconds,
+                                                                         train_r=train_r, n_fold=n_fold,
+                                                                         train_subjects=train_subjects,
+                                                                         valid_subjects=valid_subjects,
+                                                                         test_subject=test_subject,
+                                                                         direct_window=direct_window)
 
                 model_tmp = deepcopy(model)
 
@@ -326,20 +335,28 @@ class PluginCore():
                 model_tmp = algorithm.train(train_X, train_y, verbose=verbose, model=model_tmp, log_dir='runs')
 
                 if score_on_train:
-                    #TODO:change it to algorithm.score
+                    # TODO:change it to algorithm.score
                     score = algorithm.score(model=model_tmp, test_X=test_X, test_y=test_y)
                     print('valid acc using hold-out:', score)
                 return model_tmp, (train_X, train_y), (test_X, test_y)
 
             elif train_mode is 'cross_validation':
-                (train_Xs, train_ys), (test_Xs, test_ys) = self._provide_Xys(dataset=dataset,subject_mode=subject_mode,train_mode=train_mode,
-                    trial_start_offset_seconds=trial_start_offset_seconds,trial_end_offset_seconds=trial_end_offset_seconds,train_r=train_r,n_fold=n_fold,
-                    train_subjects=train_subjects,valid_subjects=valid_subjects,test_subject=test_subject,direct_window=direct_window)
+                (train_Xs, train_ys), (test_Xs, test_ys) = self._provide_Xys(dataset=dataset, subject_mode=subject_mode,
+                                                                             train_mode=train_mode,
+                                                                             trial_start_offset_seconds=trial_start_offset_seconds,
+                                                                             trial_end_offset_seconds=trial_end_offset_seconds,
+                                                                             train_r=train_r, n_fold=n_fold,
+                                                                             train_subjects=train_subjects,
+                                                                             valid_subjects=valid_subjects,
+                                                                             test_subject=test_subject,
+                                                                             direct_window=direct_window)
 
                 trained_models = []
-                assert len(train_Xs)==n_fold and len(train_ys)==n_fold and len(test_Xs)==n_fold and len(test_ys)==n_fold
+                assert len(train_Xs) == n_fold and len(train_ys) == n_fold and len(test_Xs) == n_fold and len(
+                    test_ys) == n_fold
                 for i_fold in range(n_fold):
-                    train_X, train_y, test_X, test_y = train_Xs[i_fold], train_ys[i_fold], test_Xs[i_fold], test_ys[i_fold]
+                    train_X, train_y, test_X, test_y = train_Xs[i_fold], train_ys[i_fold], test_Xs[i_fold], test_ys[
+                        i_fold]
 
                     algorithm = self.algorithms[algorithm_id]
 
@@ -348,60 +365,79 @@ class PluginCore():
 
                     if score_on_train:
                         test_score = algorithm.score(model=model_tmp, test_X=test_X, test_y=test_y)
-                        print('valid acc using hold-out on fold ', i_fold+1 , ': ', test_score)
+                        print('valid acc using hold-out on fold ', i_fold + 1, ': ', test_score)
 
                     trained_models.append(model_tmp)
 
-                return trained_models, (train_Xs,train_ys), (test_Xs,test_ys)
+                return trained_models, (train_Xs, train_ys), (test_Xs, test_ys)
 
             elif train_mode is 'nested_cross_validation':
-                (train_Xs, train_ys), (valid_Xs, valid_ys), (test_Xs, test_ys) = self._provide_Xys(dataset=dataset,subject_mode=subject_mode,train_mode=train_mode,
-                    trial_start_offset_seconds=trial_start_offset_seconds,trial_end_offset_seconds=trial_end_offset_seconds,train_r=train_r,n_fold=n_fold,
-                    train_subjects=train_subjects,valid_subjects=valid_subjects,test_subject=test_subject,direct_window=direct_window)
-
+                (train_Xs, train_ys), (valid_Xs, valid_ys), (test_Xs, test_ys) = self._provide_Xys(dataset=dataset,
+                                                                                                   subject_mode=subject_mode,
+                                                                                                   train_mode=train_mode,
+                                                                                                   trial_start_offset_seconds=trial_start_offset_seconds,
+                                                                                                   trial_end_offset_seconds=trial_end_offset_seconds,
+                                                                                                   train_r=train_r,
+                                                                                                   n_fold=n_fold,
+                                                                                                   train_subjects=train_subjects,
+                                                                                                   valid_subjects=valid_subjects,
+                                                                                                   test_subject=test_subject,
+                                                                                                   direct_window=direct_window)
 
                 test_accs = []
                 trained_models = []
 
-                trainned_Xs = []; trainned_ys = []; valided_Xs = []; valided_ys = []; tested_Xs = []; tested_ys = []
+                trainned_Xs = [];
+                trainned_ys = [];
+                valided_Xs = [];
+                valided_ys = [];
+                tested_Xs = [];
+                tested_ys = []
                 for i_fold in range(n_fold):
                     train_X, train_y, valid_X, valid_y, test_X, test_y = \
-                        train_Xs[i_fold], train_ys[i_fold], valid_Xs[i_fold], valid_ys[i_fold], test_Xs[i_fold], test_ys[i_fold]
+                        train_Xs[i_fold], train_ys[i_fold], valid_Xs[i_fold], valid_ys[i_fold], test_Xs[i_fold], \
+                            test_ys[i_fold]
 
                     test_accs_inner = []
                     trained_models_inner = []
                     for i_fold_inner in range(n_fold):
                         train_X_inner, train_y_inner, valid_X_inner, valid_y_inner, test_X_inner, test_y_inner = \
-                            train_X[i_fold], train_y[i_fold], valid_X[i_fold], valid_y[i_fold], test_X[i_fold], test_y[i_fold]
+                            train_X[i_fold], train_y[i_fold], valid_X[i_fold], valid_y[i_fold], test_X[i_fold], test_y[
+                                i_fold]
 
                         algorithm = self.algorithms[algorithm_id]
 
                         model_tmp = deepcopy(model)
-                        model_tmp = algorithm.train(train_X_inner, train_y_inner, verbose=verbose, model=model_tmp, log_dir='runs')
+                        model_tmp = algorithm.train(train_X_inner, train_y_inner, verbose=verbose, model=model_tmp,
+                                                    log_dir='runs')
 
                         if score_on_train:
                             test_score = algorithm.score(test_X_inner, test_y_inner)
                             test_accs_inner.append(test_score)
                         trained_models_inner.append(model_tmp)
-                        trainned_Xs.append(train_X_inner);trainned_ys.append(train_y_inner);valided_Xs.append(valid_X_inner);valided_ys.append(valid_y_inner)
-                        tested_Xs.append(test_X_inner);tested_ys.append(test_y_inner)
+                        trainned_Xs.append(train_X_inner);
+                        trainned_ys.append(train_y_inner);
+                        valided_Xs.append(valid_X_inner);
+                        valided_ys.append(valid_y_inner)
+                        tested_Xs.append(test_X_inner);
+                        tested_ys.append(test_y_inner)
                     if score_on_train:
                         test_accs.append(test_accs_inner)
                     trained_models.append(trained_models_inner)
 
-                return trained_models, (trainned_Xs, trainned_ys), (valided_Xs,valided_ys), (tested_Xs,tested_ys)
+                return trained_models, (trainned_Xs, trainned_ys), (valided_Xs, valided_ys), (tested_Xs, tested_ys)
 
         if subject_mode in ['subject_transfer']:
             # train in non-target data mode
             if train_mode is 'hold_out':
                 (train_X, train_y), (test_X, test_y) = self._provide_Xys(dataset=dataset, subject_mode=subject_mode,
-                                                                        train_mode=train_mode,
-                                                                        trial_start_offset_seconds=trial_start_offset_seconds,
-                                                                        trial_end_offset_seconds=trial_end_offset_seconds,
-                                                                        train_r=train_r, n_fold=n_fold,
-                                                                        train_subjects=train_subjects,
-                                                                        valid_subjects=valid_subjects,
-                                                                        test_subject=test_subject)
+                                                                         train_mode=train_mode,
+                                                                         trial_start_offset_seconds=trial_start_offset_seconds,
+                                                                         trial_end_offset_seconds=trial_end_offset_seconds,
+                                                                         train_r=train_r, n_fold=n_fold,
+                                                                         train_subjects=train_subjects,
+                                                                         valid_subjects=valid_subjects,
+                                                                         test_subject=test_subject)
 
                 model_tmp = deepcopy(model)
 
@@ -413,19 +449,20 @@ class PluginCore():
                 return model_tmp, (train_X, train_y), (test_X, test_y)
 
             elif train_mode is 'cross_validation':
-                (train_Xs, train_ys), (test_Xs, test_ys), subjects = self._provide_Xys(dataset=dataset, subject_mode=subject_mode,
-                                                                            train_mode=train_mode,
-                                                                            trial_start_offset_seconds=trial_start_offset_seconds,
-                                                                            trial_end_offset_seconds=trial_end_offset_seconds,
-                                                                            train_r=train_r, n_fold=n_fold,
-                                                                            train_subjects=train_subjects,
-                                                                            valid_subjects=valid_subjects,
-                                                                            test_subject=test_subject)
+                (train_Xs, train_ys), (test_Xs, test_ys), subjects = self._provide_Xys(dataset=dataset,
+                                                                                       subject_mode=subject_mode,
+                                                                                       train_mode=train_mode,
+                                                                                       trial_start_offset_seconds=trial_start_offset_seconds,
+                                                                                       trial_end_offset_seconds=trial_end_offset_seconds,
+                                                                                       train_r=train_r, n_fold=n_fold,
+                                                                                       train_subjects=train_subjects,
+                                                                                       valid_subjects=valid_subjects,
+                                                                                       test_subject=test_subject)
 
                 test_accs = []
                 trained_models = []
 
-                for i_fold,sub in enumerate(subjects):
+                for i_fold, sub in enumerate(subjects):
                     train_X, train_y, test_X, test_y = train_Xs[i_fold], train_ys[i_fold], test_Xs[i_fold], test_ys[
                         i_fold]
 
@@ -440,26 +477,30 @@ class PluginCore():
                         test_accs.append(test_score)
                     trained_models.append(model_tmp)
 
-                return trained_models, subjects, (test_Xs,test_ys)
+                return trained_models, subjects, (test_Xs, test_ys)
 
         if subject_mode in ['subject_transfer_unlabel']:
             assert rest_state_window_seconds is not None, print('Should provide window length for rest-state data')
             if train_mode is 'hold_out':
                 # in here train_r refers to train_ratio of target dataset
-                (train_X, train_y), (test_X, test_y) = self._provide_Xys(dataset=dataset,subject_mode='subject_transfer',train_mode='hold_out',
-                                                         trial_start_offset_seconds=trial_start_offset_seconds,
-                                                         trial_end_offset_seconds=trial_end_offset_seconds,
-                                                         train_r=train_r, n_fold=n_fold,
-                                                         train_subjects=train_subjects,
-                                                         valid_subjects=valid_subjects,
-                                                         test_subject=test_subject)
-                rest_X = self.provide_Xs(dataset_id=dataset_id,preprocess_id=preprocesser_id,subject_ids=[test_subject],window_seconds=rest_state_window_seconds)
+                (train_X, train_y), (test_X, test_y) = self._provide_Xys(dataset=dataset,
+                                                                         subject_mode='subject_transfer',
+                                                                         train_mode='hold_out',
+                                                                         trial_start_offset_seconds=trial_start_offset_seconds,
+                                                                         trial_end_offset_seconds=trial_end_offset_seconds,
+                                                                         train_r=train_r, n_fold=n_fold,
+                                                                         train_subjects=train_subjects,
+                                                                         valid_subjects=valid_subjects,
+                                                                         test_subject=test_subject)
+                rest_X = self.provide_Xs(dataset_id=dataset_id, preprocess_id=preprocesser_id,
+                                         subject_ids=[test_subject], window_seconds=rest_state_window_seconds)
 
                 model_tmp = deepcopy(model)
 
                 algorithm = self.algorithms[algorithm_id]
-                model_ori, model_trans = algorithm.train_adapt(train_X=train_X, train_y=train_y, verbose=verbose, model=model_tmp,
-                                                  log_dir='runs', rest_X=rest_X)
+                model_ori, model_trans = algorithm.train_adapt(train_X=train_X, train_y=train_y, verbose=verbose,
+                                                               model=model_tmp,
+                                                               log_dir='runs', rest_X=rest_X)
 
                 if score_on_train:
                     score_ori = algorithm.score(model=model_ori, test_X=test_X, test_y=test_y)
@@ -469,22 +510,24 @@ class PluginCore():
                 return (model_ori, model_trans), (train_X, train_y), (test_X, test_y)
 
             elif train_mode is 'cross_validation':
-                (train_Xs, train_ys), (test_Xs, test_ys), subjects = self._provide_Xys(dataset=dataset, subject_mode='subject_transfer',
-                                                                            train_mode=train_mode,
-                                                                            trial_start_offset_seconds=trial_start_offset_seconds,
-                                                                            trial_end_offset_seconds=trial_end_offset_seconds,
-                                                                            train_r=train_r, n_fold=n_fold,
-                                                                            train_subjects=train_subjects,
-                                                                            valid_subjects=valid_subjects,
-                                                                            test_subject=test_subject)
+                (train_Xs, train_ys), (test_Xs, test_ys), subjects = self._provide_Xys(dataset=dataset,
+                                                                                       subject_mode='subject_transfer',
+                                                                                       train_mode=train_mode,
+                                                                                       trial_start_offset_seconds=trial_start_offset_seconds,
+                                                                                       trial_end_offset_seconds=trial_end_offset_seconds,
+                                                                                       train_r=train_r, n_fold=n_fold,
+                                                                                       train_subjects=train_subjects,
+                                                                                       valid_subjects=valid_subjects,
+                                                                                       test_subject=test_subject)
 
-                rest_data = [self.provide_Xs(dataset_id=dataset_id,preprocess_id=preprocesser_id,subject_ids=[int(s)],window_seconds=rest_state_window_seconds)
-                                 for s in subjects]
+                rest_data = [self.provide_Xs(dataset_id=dataset_id, preprocess_id=preprocesser_id, subject_ids=[int(s)],
+                                             window_seconds=rest_state_window_seconds)
+                             for s in subjects]
 
                 test_accs = []
                 trained_models = []
 
-                for i_fold,sub in enumerate(subjects):
+                for i_fold, sub in enumerate(subjects):
                     train_X, train_y = train_Xs[i_fold], train_ys[i_fold]
                     test_X, test_y = test_Xs[i_fold], test_ys[i_fold]
                     rest_X = rest_data[i_fold]
@@ -501,31 +544,36 @@ class PluginCore():
                         test_accs.append(test_score)
                     trained_models.append(model_tmp)
 
-                return trained_models, subjects, (test_Xs,test_ys)
+                return trained_models, subjects, (test_Xs, test_ys)
 
         if subject_mode in ['subject_transfer_label']:
             # train in little target data mode
             if train_mode is 'hold_out':
                 # in here train_r refers to train_ratio of target dataset
                 (train_X, train_y), _ = self._provide_Xys(dataset=dataset,
-                                                                         subject_mode='subject_transfer',
-                                                                         train_mode='hold_out',
-                                                                         trial_start_offset_seconds=trial_start_offset_seconds,
-                                                                         trial_end_offset_seconds=trial_end_offset_seconds,
-                                                                         train_r=train_r, n_fold=n_fold,
-                                                                         train_subjects=train_subjects,
-                                                                         valid_subjects=valid_subjects,
-                                                                         test_subject=test_subject)
-                (little_X,little_y), (test_X, test_y) = self.provide_Xys(dataset_id=dataset_id,preprocess_id=preprocesser_id,subject_mode='subject_transfer_label',
-                                                                         train_mode='hold_out',trial_start_offset_seconds=trial_start_offset_seconds,
-                                                                         trial_end_offset_seconds=trial_end_offset_seconds,train_r=train_r,n_fold=None,
-                                                                        test_subject=test_subject)
+                                                          subject_mode='subject_transfer',
+                                                          train_mode='hold_out',
+                                                          trial_start_offset_seconds=trial_start_offset_seconds,
+                                                          trial_end_offset_seconds=trial_end_offset_seconds,
+                                                          train_r=train_r, n_fold=n_fold,
+                                                          train_subjects=train_subjects,
+                                                          valid_subjects=valid_subjects,
+                                                          test_subject=test_subject)
+                (little_X, little_y), (test_X, test_y) = self.provide_Xys(dataset_id=dataset_id,
+                                                                          preprocess_id=preprocesser_id,
+                                                                          subject_mode='subject_transfer_label',
+                                                                          train_mode='hold_out',
+                                                                          trial_start_offset_seconds=trial_start_offset_seconds,
+                                                                          trial_end_offset_seconds=trial_end_offset_seconds,
+                                                                          train_r=train_r, n_fold=None,
+                                                                          test_subject=test_subject)
 
                 model_tmp = deepcopy(model)
 
                 algorithm = self.algorithms[algorithm_id]
-                model_ori, model_trans = algorithm.train_finetune(train_X=train_X, train_y=train_y, verbose=verbose, model=model_tmp,
-                                                  log_dir='runs', little_X=little_X, little_y=little_y)
+                model_ori, model_trans = algorithm.train_finetune(train_X=train_X, train_y=train_y, verbose=verbose,
+                                                                  model=model_tmp,
+                                                                  log_dir='runs', little_X=little_X, little_y=little_y)
 
                 if score_on_train:
                     score_ori = algorithm.score(model=model_ori, test_X=test_X, test_y=test_y)
@@ -535,32 +583,37 @@ class PluginCore():
                 return (model_ori, model_trans), (train_X, train_y), (test_X, test_y)
 
             elif train_mode is 'cross_validation':
-                (train_Xs, train_ys), (test_Xs, test_ys), subjects = self._provide_Xys(dataset=dataset, subject_mode='subject_transfer',
-                                                                            train_mode=train_mode,
-                                                                            trial_start_offset_seconds=trial_start_offset_seconds,
-                                                                            trial_end_offset_seconds=trial_end_offset_seconds,
-                                                                            train_r=train_r, n_fold=n_fold,
-                                                                            train_subjects=train_subjects,
-                                                                            valid_subjects=valid_subjects,
-                                                                            test_subject=test_subject)
+                (train_Xs, train_ys), (test_Xs, test_ys), subjects = self._provide_Xys(dataset=dataset,
+                                                                                       subject_mode='subject_transfer',
+                                                                                       train_mode=train_mode,
+                                                                                       trial_start_offset_seconds=trial_start_offset_seconds,
+                                                                                       trial_end_offset_seconds=trial_end_offset_seconds,
+                                                                                       train_r=train_r, n_fold=n_fold,
+                                                                                       train_subjects=train_subjects,
+                                                                                       valid_subjects=valid_subjects,
+                                                                                       test_subject=test_subject)
 
-                finetune_data = [self.provide_Xys(dataset_id=dataset_id,preprocess_id=preprocesser_id,subject_mode='subject_transfer_label',
-                                        train_mode='hold_out',trial_start_offset_seconds=trial_start_offset_seconds,
-                                        trial_end_offset_seconds=trial_end_offset_seconds,train_r=train_r, n_fold=None,test_subject=s)
+                finetune_data = [self.provide_Xys(dataset_id=dataset_id, preprocess_id=preprocesser_id,
+                                                  subject_mode='subject_transfer_label',
+                                                  train_mode='hold_out',
+                                                  trial_start_offset_seconds=trial_start_offset_seconds,
+                                                  trial_end_offset_seconds=trial_end_offset_seconds, train_r=train_r,
+                                                  n_fold=None, test_subject=s)
                                  for s in subjects]
 
                 test_accs = []
                 trained_models = []
 
-                for i_fold,sub in enumerate(subjects):
+                for i_fold, sub in enumerate(subjects):
                     train_X, train_y = train_Xs[i_fold], train_ys[i_fold]
-                    (little_X,little_y), (test_X, test_y) = finetune_data[i_fold]
+                    (little_X, little_y), (test_X, test_y) = finetune_data[i_fold]
 
                     algorithm = self.algorithms[algorithm_id]
 
                     model_tmp = deepcopy(model)
                     model_tmp = algorithm.train_finetune(train_X=train_X, train_y=train_y, little_X=little_X,
-                                                         little_y=little_y, verbose=verbose, model=model_tmp, log_dir='runs')
+                                                         little_y=little_y, verbose=verbose, model=model_tmp,
+                                                         log_dir='runs')
 
                     if score_on_train:
                         test_score = algorithm.score(model=model_tmp, test_X=test_X, test_y=test_y)
@@ -568,13 +621,13 @@ class PluginCore():
                         test_accs.append(test_score)
                     trained_models.append(model_tmp)
 
-                return trained_models, subjects, (test_Xs,test_ys)
+                return trained_models, subjects, (test_Xs, test_ys)
 
     def inspect(self, ans, subject_mode, train_mode, inspector_id):
         inspector = self.inspectors[inspector_id]
         if subject_mode in ['subject_dependent', 'subject_independent_random']:
             if train_mode is 'hold_out':
-                model, (test_X, test_y) = ans[0] , ans[2]
+                model, (test_X, test_y) = ans[0], ans[2]
                 re = inspector.inspect(test_X, test_y, model)
                 return re
 
@@ -656,12 +709,12 @@ class PluginCore():
                     model_trans = trained_models[i_fold][1]
                     re_ori = inspector.inspect(test_Xs[i_fold], test_ys[i_fold], model_ori)
                     re_trans = inspector.inspect(test_Xs[i_fold], test_ys[i_fold], model_trans)
-                    res.append((re_ori,re_trans))
+                    res.append((re_ori, re_trans))
 
                 return res
 
     def track_time(self, preprocesser_id, algorithm_id, dataset_id, session_id,
-                   trial_start_offset_seconds, trial_end_offset_seconds, model, n_inter,direct_window=False):
+                   trial_start_offset_seconds, trial_end_offset_seconds, model, n_inter, direct_window=False):
         dataset = deepcopy(self.datasets[dataset_id])
         if direct_window:
             _preprocess(dataset.windows, self.preprocess[preprocesser_id])
@@ -688,30 +741,36 @@ class PluginCore():
 
         all_X, all_y = X_y_from_Dataset(windows_dataset)
         self.algorithms[algorithm_id].compile(model)
-        self.algorithms[algorithm_id].track_time(all_X=all_X,all_y=all_y,n_inter=n_inter)
+        self.algorithms[algorithm_id].track_time(all_X=all_X, all_y=all_y, n_inter=n_inter)
 
-    def feature_analysis_wrapper(self, preprocess_id, algorithm_id ,dataset_id, subject_mode, train_mode, trial_start_offset_seconds,
-                                 trial_end_offset_seconds, train_r, n_fold, model, sub_channels, time_intervals, viz_metric=None, direct_window=False):
-        ans = self.provide_Xys(preprocess_id=preprocess_id, dataset_id=dataset_id,subject_mode=subject_mode, train_mode=train_mode,
-                                    trial_start_offset_seconds=trial_start_offset_seconds, trial_end_offset_seconds=trial_end_offset_seconds,
-                                    train_r=train_r, n_fold=n_fold, direct_window=direct_window)
-        if subject_mode=='subject_dependent' and train_mode=='hold_out':
+    def feature_analysis_wrapper(self, preprocess_id, algorithm_id, dataset_id, subject_mode, train_mode,
+                                 trial_start_offset_seconds,
+                                 trial_end_offset_seconds, train_r, n_fold, model, sub_channels, time_intervals,
+                                 viz_metric=None, direct_window=False):
+        ans = self.provide_Xys(preprocess_id=preprocess_id, dataset_id=dataset_id, subject_mode=subject_mode,
+                               train_mode=train_mode,
+                               trial_start_offset_seconds=trial_start_offset_seconds,
+                               trial_end_offset_seconds=trial_end_offset_seconds,
+                               train_r=train_r, n_fold=n_fold, direct_window=direct_window)
+        if subject_mode == 'subject_dependent' and train_mode == 'hold_out':
             res = []
             for sub_channel in sub_channels:
                 for time_interval in time_intervals:
                     (train_X, train_y), (test_X, test_y) = ans[0], ans[1]
                     sub_model = self.algorithms[algorithm_id].compile(model, sub_channel, time_interval)
 
-                    trainned_model = self.algorithms[algorithm_id].train(model=sub_model, train_X=train_X, train_y=train_y, channels=sub_channel,
-                                                       time_interval=time_interval)
-                    re = self.algorithms[algorithm_id].inspect(test_X=test_X, test_y=test_y, model=trainned_model, channels=sub_channel,
-                                             time_interval=time_interval)
+                    trainned_model = self.algorithms[algorithm_id].train(model=sub_model, train_X=train_X,
+                                                                         train_y=train_y, channels=sub_channel,
+                                                                         time_interval=time_interval)
+                    re = self.algorithms[algorithm_id].inspect(test_X=test_X, test_y=test_y, model=trainned_model,
+                                                               channels=sub_channel,
+                                                               time_interval=time_interval)
                     res.append((re, sub_channel, time_interval))
             if viz_metric is not None:
-                self.algorithms[algorithm_id].plot_metric(res=res,metric=viz_metric)
+                self.algorithms[algorithm_id].plot_metric(res=res, metric=viz_metric)
             return res
 
-    def log_model_search(self, gs,  keys, dir):
+    def log_model_search(self, gs, keys, dir):
         df = return_df_search(gs, keys)
 
         time_info = datetime.now().strftime("%Y-%m-%d-%H-%M")
@@ -744,19 +803,22 @@ class PluginCore():
             df.to_csv(csv_path, index=False, mode='w', header=True)
 
     def run_cv_subject_dependent(self, preprocesser_id, algorithm_id, inspector_id, model, trial_start_offset_seconds,
-                          trial_end_offset_seconds, n_fold, model_name, metrics, direct_window=False):
+                                 trial_end_offset_seconds, n_fold, model_name, metrics, direct_window=False):
         self.n_subjects = len(self.datasets)
         self.subject_list = self.datasets.keys()
 
         re_subjects = []
         trainned_model_subjects = []
         for sub in self.subject_list:
-            ans = self.train_model(preprocesser_id=preprocesser_id,algorithm_id=algorithm_id,dataset_id=sub,model=model,
-                                   subject_mode='subject_dependent',train_mode='cross_validation',
+            ans = self.train_model(preprocesser_id=preprocesser_id, algorithm_id=algorithm_id, dataset_id=sub,
+                                   model=model,
+                                   subject_mode='subject_dependent', train_mode='cross_validation',
                                    trial_start_offset_seconds=trial_start_offset_seconds,
-                                   trial_end_offset_seconds=trial_end_offset_seconds,n_fold=n_fold,train_r=None,direct_window=direct_window)
-            res = self.inspect(ans, subject_mode='subject_dependent',train_mode='cross_validation',inspector_id=inspector_id)
-            for i_fold,re in enumerate(res):
+                                   trial_end_offset_seconds=trial_end_offset_seconds, n_fold=n_fold, train_r=None,
+                                   direct_window=direct_window)
+            res = self.inspect(ans, subject_mode='subject_dependent', train_mode='cross_validation',
+                               inspector_id=inspector_id)
+            for i_fold, re in enumerate(res):
                 re['model'] = model_name
                 re['subject'] = sub
                 re['i_fold'] = i_fold
@@ -768,18 +830,19 @@ class PluginCore():
             df_ = pd.DataFrame({key: [value] for key, value in re.items() if key in metrics})
             df_subjects = df_subjects.append(df_)
 
-
         self.n_subjects = None
         self.subject_list = None
         return re_subjects, trainned_model_subjects, df_subjects
 
-    def run_cv_none_target_data(self, preprocesser_id, algorithm_id, dataset_id , inspector_id, model, trial_start_offset_seconds,
-                          trial_end_offset_seconds, n_fold, model_name, metrics):
-        ans = self.train_model(preprocesser_id=preprocesser_id,algorithm_id=algorithm_id,dataset_id=dataset_id,model=model,
-                               subject_mode='subject_transfer',train_mode='cross_validation',
+    def run_cv_none_target_data(self, preprocesser_id, algorithm_id, dataset_id, inspector_id, model,
+                                trial_start_offset_seconds,
+                                trial_end_offset_seconds, n_fold, model_name, metrics):
+        ans = self.train_model(preprocesser_id=preprocesser_id, algorithm_id=algorithm_id, dataset_id=dataset_id,
+                               model=model,
+                               subject_mode='subject_transfer', train_mode='cross_validation',
                                trial_start_offset_seconds=trial_start_offset_seconds,
-                               trial_end_offset_seconds=trial_end_offset_seconds,n_fold=n_fold,train_r=None,
-                               train_subjects=None,valid_subjects=None,test_subject=None)
+                               trial_end_offset_seconds=trial_end_offset_seconds, n_fold=n_fold, train_r=None,
+                               train_subjects=None, valid_subjects=None, test_subject=None)
         res = self.inspect(ans, subject_mode='subject_transfer', train_mode='cross_validation',
                            inspector_id=inspector_id)
 
@@ -797,17 +860,20 @@ class PluginCore():
 
         return re_subjects, trainned_modes, df_subjects
 
-    def run_cv_none_target_data_id(self, preprocesser_id, algorithm_id, dataset_id , inspector_id, model, trial_start_offset_seconds,
-                          trial_end_offset_seconds, model_name, metrics, subjects):
+    def run_cv_none_target_data_id(self, preprocesser_id, algorithm_id, dataset_id, inspector_id, model,
+                                   trial_start_offset_seconds,
+                                   trial_end_offset_seconds, model_name, metrics, subjects):
         re_subjects = []
         trainned_models = []
         for sub in subjects:
             test_sub = sub
             train_subs = [s for s in deepcopy(subjects) if s != sub]
             model_tmp = deepcopy(model)
-            ans = self.train_model_with_id(preprocesser_id=preprocesser_id,algorithm_id=algorithm_id,dataset_id=dataset_id,model=model_tmp,
-                                discriminator=None, trial_start_offset_seconds=trial_start_offset_seconds,
-                                trial_end_offset_seconds=trial_end_offset_seconds, train_subjects=train_subs,test_subjects=test_sub)
+            ans = self.train_model_with_id(preprocesser_id=preprocesser_id, algorithm_id=algorithm_id,
+                                           dataset_id=dataset_id, model=model_tmp,
+                                           discriminator=None, trial_start_offset_seconds=trial_start_offset_seconds,
+                                           trial_end_offset_seconds=trial_end_offset_seconds, train_subjects=train_subs,
+                                           test_subjects=test_sub)
             res = self.inspect(ans, subject_mode='subject_transfer', train_mode='hold_out',
                                inspector_id=inspector_id)
 
@@ -817,7 +883,7 @@ class PluginCore():
             res['subject'] = sub
             re_subjects.append(res)
 
-        metrics.extend(['model','subject'])
+        metrics.extend(['model', 'subject'])
         df_subjects = pd.DataFrame()
         for re in re_subjects:
             df_ = pd.DataFrame({key: [value] for key, value in re.items() if key in metrics})
@@ -825,10 +891,11 @@ class PluginCore():
 
         return re_subjects, trainned_models, df_subjects
 
-    def train_model_with_id(self, preprocesser_id, algorithm_id, dataset_id , model, discriminator ,trial_start_offset_seconds,
-                          trial_end_offset_seconds, train_subjects, test_subjects, viz=False):
+    def train_model_with_id(self, preprocesser_id, algorithm_id, dataset_id, model, discriminator,
+                            trial_start_offset_seconds,
+                            trial_end_offset_seconds, train_subjects, test_subjects, viz=False):
         dataset = deepcopy(self.datasets[dataset_id])
-        preprocess(dataset,self.preprocess[preprocesser_id])
+        preprocess(dataset, self.preprocess[preprocesser_id])
 
         sfreq = dataset.datasets[0].raw.info['sfreq']
         trial_start_offset_samples = int(trial_start_offset_seconds * sfreq)
@@ -858,15 +925,19 @@ class PluginCore():
         train_X, train_y, train_subjects = X_y_ID_from_Dataset(subject_dataset)
         test_X, test_y = X_y_from_Dataset(target_set)
 
-        trainned_model = self.algorithms[algorithm_id].train_model_with_id(train_X=train_X, train_y=train_y, model=model, discriminator=discriminator,
-                                                                train_subjects=train_subjects, test_X=test_X, test_y=test_y, viz=False)
-        return trainned_model, (train_X, train_y), (test_X,test_y)
+        trainned_model = self.algorithms[algorithm_id].train_model_with_id(train_X=train_X, train_y=train_y,
+                                                                           model=model, discriminator=discriminator,
+                                                                           train_subjects=train_subjects, test_X=test_X,
+                                                                           test_y=test_y, viz=False)
+        return trainned_model, (train_X, train_y), (test_X, test_y)
 
     def run_cv_rest_target_data(self, preprocesser_id, algorithm_id, dataset_id, model, trial_start_offset_seconds,
-                          trial_end_offset_seconds, n_fold, inspector_id, model_name, metrics, rest_state_window_seconds=4):
+                                trial_end_offset_seconds, n_fold, inspector_id, model_name, metrics,
+                                rest_state_window_seconds=4):
         ans = self.train_model(preprocesser_id=preprocesser_id, algorithm_id=algorithm_id, dataset_id=dataset_id,
                                model=model, subject_mode='subject_transfer_unlabel', train_mode='cross_validation',
-                               trial_start_offset_seconds=trial_start_offset_seconds, rest_state_window_seconds=rest_state_window_seconds,
+                               trial_start_offset_seconds=trial_start_offset_seconds,
+                               rest_state_window_seconds=rest_state_window_seconds,
                                trial_end_offset_seconds=trial_end_offset_seconds, n_fold=n_fold, train_r=None,
                                train_subjects=None, valid_subjects=None, test_subject=None)
         res = self.inspect(ans, subject_mode='subject_transfer_unlabel', train_mode='cross_validation',
@@ -895,7 +966,7 @@ class PluginCore():
     @staticmethod
     def print_csv_names(dir):
         files = os.listdir(dir)
-        csv_files = [file for file in files if file.split('.')[-1] is '.csv' and file.split('_')[0]=='MS']
+        csv_files = [file for file in files if file.split('.')[-1] is '.csv' and file.split('_')[0] == 'MS']
         print(csv_files)
 
     @staticmethod
@@ -905,14 +976,14 @@ class PluginCore():
 
     def save_core(self, file_dir, file_name):
         document = {
-            'datasets':self.datasets,
-            'preprocess':self.preprocess,
-            'algorithms':self.algorithms,
-            'modules':self.modules,
-            'inspectors':self.inspectors
+            'datasets': self.datasets,
+            'preprocess': self.preprocess,
+            'algorithms': self.algorithms,
+            'modules': self.modules,
+            'inspectors': self.inspectors
         }
-        with open(os.path.join(file_dir,file_name),'wb') as f:
-            pickle.dump(document ,f)
+        with open(os.path.join(file_dir, file_name), 'wb') as f:
+            pickle.dump(document, f)
 
     def load_core_from_file(self, file_path):
         with open(file_path, 'rb') as f:
