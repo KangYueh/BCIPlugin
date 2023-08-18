@@ -245,7 +245,6 @@ class PluginCore():
                 return (train_Xs, train_ys), (test_Xs, test_ys), subjects
 
     def _provide_Xs(self, dataset, window_seconds):
-
         sfreq = dataset.datasets[0].raw.info['sfreq']
         assert all([ds.raw.info['sfreq'] == sfreq for ds in dataset.datasets])
         window_seconds_sample = int(sfreq * window_seconds)
