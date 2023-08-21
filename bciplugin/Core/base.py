@@ -11,7 +11,7 @@ import pandas as pd
 
 from bciplugin.Core.Processor.base import preprocess, _preprocess
 from bciplugin.Core.Datasets.utils.windowers import create_windows_from_events
-from bciplugin.Core.Datasets.utils.Xy import x_y_from_dataset, X_from_Dataset, X_y_ID_from_Dataset
+from bciplugin.Core.Datasets.utils.Xy import x_y_from_dataset, x_from_dataset, x_y_id_from_dataset
 from bciplugin.Core.Datasets.base import BaseConcatDataset, SubjectIDDataset
 from bciplugin.Core.Datasets.moabb import get_dataset_rest_stated
 from bciplugin.Core.Decoder.trainer.utils import return_df_search
@@ -258,7 +258,7 @@ class PluginCore():
             preload=True,
         )
 
-        rest_X = X_from_Dataset(windows_dataset, shuffle=False)
+        rest_X = x_from_dataset(windows_dataset, shuffle=False)
 
         return rest_X
 
@@ -921,7 +921,7 @@ class PluginCore():
                 transform=ds.transform
             ))
         subject_dataset = BaseConcatDataset(subject_dataset)
-        train_X, train_y, train_subjects = X_y_ID_from_Dataset(subject_dataset)
+        train_X, train_y, train_subjects = x_y_id_from_dataset(subject_dataset)
         test_X, test_y = x_y_from_dataset(target_set)
 
         trainned_model = self.algorithms[algorithm_id].train_model_with_id(train_X=train_X, train_y=train_y,

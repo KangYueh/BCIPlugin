@@ -30,7 +30,7 @@ def x_y_from_dataset(dataset, shuffle=False):
         return Data[0], Data[1]
 
 
-def X_from_Dataset(dataset, shuffle=False):
+def x_from_dataset(dataset, shuffle=False):
     """
     Extract input data from a dataset.
 
@@ -51,7 +51,7 @@ def X_from_Dataset(dataset, shuffle=False):
         return Data[0]
 
 
-def X_y_embedding_from_Dataset(dataset, shuffle=False):
+def x_y_embedding_from_dataset(dataset, shuffle=False):
     """
     Extract input data, target labels, and embedding data from a dataset.
 
@@ -72,7 +72,7 @@ def X_y_embedding_from_Dataset(dataset, shuffle=False):
         return Data[0], Data[1], Data[2], Data[3]
 
 
-def X_y_ID_from_Dataset(dataset, shuffle=False):
+def x_y_id_from_dataset(dataset, shuffle=False):
     """
     Extract input data, target labels, and ID information from a dataset.
 
@@ -92,7 +92,7 @@ def X_y_ID_from_Dataset(dataset, shuffle=False):
         return Data[0], Data[1], Data[2]
 
 
-def create_from_X_y(
+def create_from_x_y(
         X, y, drop_last_window, sfreq=None, ch_names=None, window_size_samples=None,
         window_stride_samples=None):
     """Create a BaseConcatDataset of WindowsDatasets from X and y to be used for
@@ -105,7 +105,8 @@ def create_from_X_y(
         list of pre-cut trials as n_trials x n_channels x n_times
     y: array-like
         targets corresponding to the trials
-    sfreq: common sampling frequency of all trials
+    sfreq:
+        common sampling frequency of all trials
     ch_names: array-like
         channel names of the trials
     drop_last_window: bool

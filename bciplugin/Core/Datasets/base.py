@@ -95,10 +95,10 @@ class BaseDataset(Dataset):
             raise ValueError(f"'{target_name}' not in description.")
 
     def __getitem__(self, index):
-        X, y = self.raw[:, index][0], self.target
+        x, y = self.raw[:, index][0], self.target
         if self.transform is not None:
-            X = self.transform(X)
-        return X, y
+            x = self.transform(x)
+        return x, y
 
     def __len__(self):
         return len(self.raw)
