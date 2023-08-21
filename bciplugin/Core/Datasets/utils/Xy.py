@@ -9,7 +9,7 @@ from bciplugin.Core.Datasets.base import BaseDataset, BaseConcatDataset
 from bciplugin.Core.Datasets.utils.windowers import create_fixed_length_windows
 
 
-def X_y_from_Dataset(dataset, shuffle=False):
+def x_y_from_dataset(dataset, shuffle=False):
     """
     Extract input data and target labels from a dataset.
 

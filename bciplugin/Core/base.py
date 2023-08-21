@@ -11,7 +11,7 @@ import pandas as pd
 
 from bciplugin.Core.Processor.base import preprocess, _preprocess
 from bciplugin.Core.Datasets.utils.windowers import create_windows_from_events
-from bciplugin.Core.Datasets.utils.Xy import X_y_from_Dataset, X_from_Dataset, X_y_ID_from_Dataset
+from bciplugin.Core.Datasets.utils.Xy import x_y_from_dataset, X_from_Dataset, X_y_ID_from_Dataset
 from bciplugin.Core.Datasets.base import BaseConcatDataset, SubjectIDDataset
 from bciplugin.Core.Datasets.moabb import get_dataset_rest_stated
 from bciplugin.Core.Decoder.trainer.utils import return_df_search
@@ -117,13 +117,13 @@ class PluginCore():
                 n_trials_test = n_trials - n_trials_train
                 train_set, test_set = torch.utils.data.random_split(windows_dataset, [n_trials_train, n_trials_test])
 
-                train_X, train_y = X_y_from_Dataset(train_set)
-                test_X, test_y = X_y_from_Dataset(test_set)
+                train_X, train_y = x_y_from_dataset(train_set)
+                test_X, test_y = x_y_from_dataset(test_set)
 
                 return (train_X, train_y), (test_X, test_y)
 
             elif train_mode is 'cross_validation':
-                all_X, all_y = X_y_from_Dataset(windows_dataset)
+                all_X, all_y = x_y_from_dataset(windows_dataset)
                 kfold = KFold(n_splits=n_fold, shuffle=False)
 
                 train_Xs, train_ys, test_Xs, test_ys = [], [], [], []
@@ -138,7 +138,7 @@ class PluginCore():
                 return (train_Xs, train_ys), (test_Xs, test_ys)
 
             elif train_mode is 'nested_cross_validation':
-                all_X, all_y = X_y_from_Dataset(windows_dataset)
+                all_X, all_y = x_y_from_dataset(windows_dataset)
                 kfold = KFold(n_splits=n_fold, shuffle=False)
 
                 train_Xs, train_ys, valid_Xs, valid_ys, test_Xs, test_ys = [], [], [], [], [], []
@@ -183,8 +183,8 @@ class PluginCore():
                 n_trials_test = n_trials - n_trials_train
                 train_set, test_set = torch.utils.data.random_split(target_set, [n_trials_train, n_trials_test])
 
-                train_X, train_y = X_y_from_Dataset(train_set)
-                test_X, test_y = X_y_from_Dataset(test_set)
+                train_X, train_y = x_y_from_dataset(train_set)
+                test_X, test_y = x_y_from_dataset(test_set)
                 return (train_X, train_y), (test_X, test_y)
 
         if subject_mode in ['subject_transfer']:
@@ -197,7 +197,7 @@ class PluginCore():
                     trial_stop_offset_samples=trial_end_offset_samples,
                     preload=True,
                 )
-                test_X, test_y = X_y_from_Dataset(test_set)
+                test_X, test_y = x_y_from_dataset(test_set)
 
                 train_set = create_windows_from_events(
                     BaseConcatDataset([dataset_split[d] for d in dataset_split if int(d) in train_subjects]),
@@ -205,7 +205,7 @@ class PluginCore():
                     trial_stop_offset_samples=trial_end_offset_samples,
                     preload=True,
                 )
-                train_X, train_y = X_y_from_Dataset(train_set)
+                train_X, train_y = x_y_from_dataset(train_set)
 
                 return (train_X, train_y), (test_X, test_y)
 
@@ -227,7 +227,7 @@ class PluginCore():
                         trial_stop_offset_samples=trial_end_offset_samples,
                         preload=True,
                     )
-                    test_X, test_y = X_y_from_Dataset(test_set)
+                    test_X, test_y = x_y_from_dataset(test_set)
 
                     train_set = create_windows_from_events(
                         BaseConcatDataset([dataset_split[d] for d in dataset_split if d in train_subjects]),
@@ -235,7 +235,7 @@ class PluginCore():
                         trial_stop_offset_samples=trial_end_offset_samples,
                         preload=True,
                     )
-                    train_X, train_y = X_y_from_Dataset(train_set)
+                    train_X, train_y = x_y_from_dataset(train_set)
 
                     train_Xs.append(train_X)
                     train_ys.append(train_y)
@@ -738,7 +738,7 @@ class PluginCore():
                 preload=True,
             )
 
-        all_X, all_y = X_y_from_Dataset(windows_dataset)
+        all_X, all_y = x_y_from_dataset(windows_dataset)
         self.algorithms[algorithm_id].compile(model)
         self.algorithms[algorithm_id].track_time(all_X=all_X, all_y=all_y, n_inter=n_inter)
 
@@ -922,7 +922,7 @@ class PluginCore():
             ))
         subject_dataset = BaseConcatDataset(subject_dataset)
         train_X, train_y, train_subjects = X_y_ID_from_Dataset(subject_dataset)
-        test_X, test_y = X_y_from_Dataset(target_set)
+        test_X, test_y = x_y_from_dataset(target_set)
 
         trainned_model = self.algorithms[algorithm_id].train_model_with_id(train_X=train_X, train_y=train_y,
                                                                            model=model, discriminator=discriminator,
