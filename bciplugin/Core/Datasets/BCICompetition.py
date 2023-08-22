@@ -6,8 +6,9 @@ import requests
 import pandas as pd
 from scipy.io import loadmat
 
-from PluginCore.Datasets.base import BaseConcatDataset,BaseDataset
+from bciplugin.Core.Datasets.base import BaseConcatDataset, BaseDataset
 from manifest import BCIC_dir
+
 
 def get_raw_trial_from_gdf_file(dataset, filename, classes=None, special_case=None):
     raw_t = mne.io.read_raw_gdf(filename, stim_channel='auto')
@@ -36,44 +37,44 @@ def get_raw_trial_from_gdf_file(dataset, filename, classes=None, special_case=No
             trial_codes = [7]
             num_to_detract = 0
             code_start = 6
-        else: #normal occasion for that dataset
+        else:  # normal occasion for that dataset
             trial_codes = [name_to_code[d] for d in dataset.eventDescription if 'Onset' in dataset.eventDescription[d]]
     elif dataset.name == 'BCIC4_2b':
         if '783' in name_to_code.keys():  # Reading label file
-            trial_codes = [6,7]
+            trial_codes = [6, 7]
             num_to_detract = 0
             code_start = 9
-        else: #normal occasion for that dataset
+        else:  # normal occasion for that dataset
             trial_codes = [name_to_code[d] for d in dataset.eventDescription if 'Onset' in dataset.eventDescription[d]]
             code_start = 9
     elif dataset.name == 'BCIC3_3b':
-        trial_codes = [2,3]
+        trial_codes = [2, 3]
     else:
         trial_codes = [name_to_code[d] for d in dataset.eventDescription if 'Onset' in dataset.eventDescription[d]]
 
     if dataset.name == 'BCIC3_3a' and classes is not None:
         classes = classes + 2
-        j=0
+        j = 0
         for i in range(len(events)):
-            if events[i,2] == 7 or events[i,2] == 3 or events[i,2]==4 or events[i,2]==5 or events[i,2]==6:
-                events[i,2] = classes[j]
+            if events[i, 2] == 7 or events[i, 2] == 3 or events[i, 2] == 4 or events[i, 2] == 5 or events[i, 2] == 6:
+                events[i, 2] = classes[j]
                 j += 1
-            if events[i,2] == 3 or events[i,2]==4 or events[i,2]==5 or events[i,2]==6:
-                events[i,2] == np.nan
-        events = events[events[:,2]!=np.nan]
+            if events[i, 2] == 3 or events[i, 2] == 4 or events[i, 2] == 5 or events[i, 2] == 6:
+                events[i, 2] == np.nan
+        events = events[events[:, 2] != np.nan]
 
     if dataset.name == 'BCIC3_3b' and classes is not None:
-        if special_case==None:
+        if special_case == None:
             classes = classes + 1
             j = 0
             for i in range(len(events)):
-                if events[i,2] == 5 or events[i,2] == 2 or events[i,2]==3:
-                    events[i,2] = classes[j]
+                if events[i, 2] == 5 or events[i, 2] == 2 or events[i, 2] == 3:
+                    events[i, 2] = classes[j]
                     j += 1
-                if events[i,2] == 2 or events[i,2]==3:
-                    events[i,2] == np.nan
-            events = events[events[:,2]!=np.nan]
-        elif special_case==1:
+                if events[i, 2] == 2 or events[i, 2] == 3:
+                    events[i, 2] == np.nan
+            events = events[events[:, 2] != np.nan]
+        elif special_case == 1:
             classes = classes + 1
             j = 0
             for i in range(len(events)):
@@ -86,7 +87,7 @@ def get_raw_trial_from_gdf_file(dataset, filename, classes=None, special_case=No
                     j += 1
 
     if dataset.name == 'BCIC4_2b' and classes is not None:
-        if special_case==1:
+        if special_case == 1:
             classes = classes + 5
             j = 0
             for i in range(len(events)):
@@ -94,27 +95,27 @@ def get_raw_trial_from_gdf_file(dataset, filename, classes=None, special_case=No
                     events[i, 2] = classes[j]
                     j += 1
         else:
-        # classes = classes + 5
-        # j=0
-        # for i in range(len(events)):
-        #     if events[i,2] == 11 or events[i,2] == 6 or events[i,2]==7:
-        #         events[i,2] = classes[j]
-        #         j += 1
-        #     if events[i,2] == 6 or events[i,2]==7:
-        #         events[i,2] == np.nan
-        # events = events[events[:,2]!=np.nan]
-            events = np.array(events,dtype=np.float)
+            # classes = classes + 5
+            # j=0
+            # for i in range(len(events)):
+            #     if events[i,2] == 11 or events[i,2] == 6 or events[i,2]==7:
+            #         events[i,2] = classes[j]
+            #         j += 1
+            #     if events[i,2] == 6 or events[i,2]==7:
+            #         events[i,2] == np.nan
+            # events = events[events[:,2]!=np.nan]
+            events = np.array(events, dtype=np.float)
             classes = classes + 5
             j = 0
             for i in range(len(events)):
                 if events[i, 2] == 6.0 or events[i, 2] == 7.0:
                     events[i, 2] = np.nan
-            events = events[np.logical_not(np.isnan(events[:,2]))]
+            events = events[np.logical_not(np.isnan(events[:, 2]))]
             for i in range(len(events)):
                 if events[i, 2] == 11.0:
                     events[i, 2] = classes[j]
                     j += 1
-            events = np.array(events,dtype=np.int)
+            events = np.array(events, dtype=np.int)
 
     num = trial_codes
     num.sort()
@@ -136,8 +137,8 @@ def get_raw_trial_from_gdf_file(dataset, filename, classes=None, special_case=No
     raw.info['events'] = trial_events
     # unique_classes = np.unique(trial_events[:, 2])
 
-    if dataset.name=='BCIC3_3b' or dataset.name=='BCIC4_2b':
-        #no rejected trials in that dataset file
+    if dataset.name == 'BCIC3_3b' or dataset.name == 'BCIC4_2b':
+        # no rejected trials in that dataset file
         return raw
 
     # now also create 0-1 vector for rejected trials
@@ -151,7 +152,7 @@ def get_raw_trial_from_gdf_file(dataset, filename, classes=None, special_case=No
     #               c == 2 and (events_no1[i + 3, 2] in [3, 4, 5, 6])]
     #     mask = [(t in t_time) for t in events[:,0]]
     #     trial_start_events = events[mask]
-    assert len(trial_start_events)==len(trial_events),print(len(trial_start_events),len(trial_events))
+    assert len(trial_start_events) == len(trial_events), print(len(trial_start_events), len(trial_events))
     artifact_trial_mask = np.zeros(len(trial_start_events), dtype=np.uint8)
     artifact_events = events[events[:, 2] == name_to_code['1023']]
     for artifact_time in artifact_events[:, 0]:
@@ -173,21 +174,23 @@ def get_raw_trial_from_gdf_file(dataset, filename, classes=None, special_case=No
     # for events in raw, there are only 4 task events 0,1,2,3
     return raw
 
+
 def fetch_data_with_BCIC(data):
     raws, subject_ids, session_ids, run_ids = [], [], [], []
-    for subj_id,subj_data in data.items():
+    for subj_id, subj_data in data.items():
         for sess_id, sess_data in subj_data.items():
-            for run_id,raw in sess_data.items():
+            for run_id, raw in sess_data.items():
                 raws.append(raw)
                 subject_ids.append(subj_id)
                 session_ids.append(sess_id)
                 run_ids.append(run_id)
     description = pd.DataFrame({
-            'subject': subject_ids,
-            'session': session_ids,
-            'run': run_ids
-        })
-    return raws,description
+        'subject': subject_ids,
+        'session': session_ids,
+        'run': run_ids
+    })
+    return raws, description
+
 
 class BCICompetition3_3a(BaseConcatDataset):
     def __init__(self):
@@ -220,8 +223,8 @@ class BCICompetition3_3a(BaseConcatDataset):
 
         data = {}
         for i_sub in range(self.n_subject):
-            data['subject'+str(i_sub)] = {}
-        path=os.path.join(BCIC_dir,r'3_3a')
+            data['subject' + str(i_sub)] = {}
+        path = os.path.join(BCIC_dir, r'3_3a')
         for i in range(self.n_subject):
             path_s = os.path.join(path, 's' + str(i + 1))
             for file_path in os.listdir(path_s):
@@ -242,9 +245,9 @@ class BCICompetition3_3a(BaseConcatDataset):
                                    an['description'] not in ['769', '770', '771', '772']]
                     raw_test.annotations.delete(classes_idx)
 
-                    data['subject'+str(i)] = {
-                        'session_T':{'run_0':raw_train},
-                        'session_E':{'run_0':raw_test}
+                    data['subject' + str(i)] = {
+                        'session_T': {'run_0': raw_train},
+                        'session_E': {'run_0': raw_test}
                     }
 
         raws, description = fetch_data_with_BCIC(data)
@@ -253,10 +256,11 @@ class BCICompetition3_3a(BaseConcatDataset):
                        for raw, (_, row) in zip(raws, description.iterrows())]
         super(BCICompetition3_3a, self).__init__(all_base_ds)
 
+
 class BCICompetition3_3b(BaseConcatDataset):
     def __init__(self):
-        #Subject 1 has problem
-        self.channel_names = ['C3','C4']
+        # Subject 1 has problem
+        self.channel_names = ['C3', 'C4']
         self.fs = 125
         self.channel_types = ['eeg'] * 2
         self.montage = 'standard_1005'
@@ -265,7 +269,7 @@ class BCICompetition3_3b(BaseConcatDataset):
         self.eventDescription = {'768': 'startTrail',
                                  '769': 'cueOnsetLeft',
                                  '770': 'cueOnsetRight',
-                                 '781':'feedbackOnsetContinuous',
+                                 '781': 'feedbackOnsetContinuous',
                                  '783': 'cueUnknown',
                                  '785': 'beep'}
         label_file_names = ['true_labels_O3VR.txt', 'true_labels_S4.txt', 'true_labels_X11.txt']
@@ -313,6 +317,7 @@ class BCICompetition3_3b(BaseConcatDataset):
                        for raw, (_, row) in zip(raws, description.iterrows())]
         super(BCICompetition3_3b, self).__init__(all_base_ds)
 
+
 class BCICompetition3_4a(BaseConcatDataset):
     def __init__(self):
         self.path = os.path.join(BCIC_dir, '3_4a')
@@ -324,7 +329,7 @@ class BCICompetition3_4a(BaseConcatDataset):
 
         data = {}
         for i_sub in range(self.n_subject):
-            data['subject'+str(i_sub)] = {}
+            data['subject' + str(i_sub)] = {}
         for i in range(self.n_subject):
             "operate on self.subjects_data[i] "
             file_mat_path = [p for p in os.listdir(os.path.join(self.path, 's' + str(i + 1))) if

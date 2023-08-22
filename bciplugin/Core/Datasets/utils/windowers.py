@@ -6,8 +6,79 @@ import numpy as np
 import mne
 import pandas as pd
 from joblib import Parallel, delayed
+import logging
+from bciplugin.Core.Datasets.base import WindowsDataset, BaseConcatDataset, BaseDataset
 
-from bciplugin.Core.Datasets.base import WindowsDataset,BaseConcatDataset
+log = logging.getLogger(__name__)
+
+
+def create_windows_from_x_y(
+        X, y, drop_last_window, sfreq=None, ch_names=None, window_size_samples=None,
+        window_stride_samples=None):
+    """ Create a BaseConcatDataset of WindowsDatasets from X and y to be used for
+    decoding with skorch and braindecode, where X is a list of pre-cut trials
+    and y are corresponding targets.
+
+    Parameters
+    ----------
+    X: array-like
+        list of pre-cut trials as n_trials x n_channels x n_times
+    y: array-like
+        targets corresponding to the trials
+    sfreq:
+        common sampling frequency of all trials
+    ch_names: array-like
+        channel names of the trials
+    drop_last_window: bool
+        whether or not have a last overlapping window, when
+        windows/windows do not equally divide the continuous signal
+    window_size_samples: int
+        window size
+    window_stride_samples: int
+        stride between windows
+
+    Returns
+    -------
+    windows_datasets: BaseConcatDataset
+        X and y transformed to a dataset format that is compatible with skorch
+        and braindecode
+    """
+
+    n_samples_per_x = []
+    base_datasets = []
+    if sfreq is None:
+        sfreq = 100
+        log.info("No sampling frequency given, set to 100 Hz.")
+    if ch_names is None:
+        ch_names = [str(i) for i in range(X.shape[1])]
+        log.info(f"No channel names given, set to 0-{X.shape[1]}).")
+
+    for x, target in zip(X, y):
+        n_samples_per_x.append(x.shape[1])
+        info = mne.create_info(ch_names=ch_names, sfreq=sfreq)
+        raw = mne.io.RawArray(x, info)
+        base_dataset = BaseDataset(raw, pd.Series({"target": target}),
+                                   target_name="target")
+        base_datasets.append(base_dataset)
+    base_datasets = BaseConcatDataset(base_datasets)
+
+    if window_size_samples is None and window_stride_samples is None:
+        if not len(np.unique(n_samples_per_x)) == 1:
+            raise ValueError(f"if 'window_size_samples' and "
+                             f"'window_stride_samples' are None, "
+                             f"all trials have to have the same length")
+        window_size_samples = n_samples_per_x[0]
+        window_stride_samples = n_samples_per_x[0]
+    windows_datasets = create_fixed_length_windows(
+        base_datasets,
+        start_offset_samples=0,
+        stop_offset_samples=None,
+        window_size_samples=window_size_samples,
+        window_stride_samples=window_stride_samples,
+        drop_last_window=drop_last_window
+    )
+    return windows_datasets
+
 
 def create_windows_from_events(
         concat_ds, trial_start_offset_samples, trial_stop_offset_samples,
@@ -105,7 +176,8 @@ def create_windows_from_events(
 
     return BaseConcatDataset(list_of_windows_ds)
 
-#Windower that creates sliding windows.
+
+# Windower that creates sliding windows.
 def create_fixed_length_windows(
         concat_ds, start_offset_samples, stop_offset_samples,
         window_size_samples, window_stride_samples, drop_last_window,
@@ -176,7 +248,8 @@ def create_fixed_length_windows(
 
     return BaseConcatDataset(list_of_windows_ds)
 
-#Create WindowsDataset from BaseDataset based on events.
+
+# Create WindowsDataset from BaseDataset based on events.
 def _create_windows_from_events(
         ds, infer_mapping, infer_window_size_stride,
         trial_start_offset_samples, trial_stop_offset_samples,
@@ -218,7 +291,7 @@ def _create_windows_from_events(
     # Onsets are relative to the beginning of the recording
     filtered_durations = np.array(
         [a['duration'] for a in ds.raw.annotations
-            if a['description'] in events_id]
+         if a['description'] in events_id]
     )
     stops = onsets + (filtered_durations * ds.raw.info['sfreq']).astype(int)
     # XXX This could probably be simplified by using chunk_duration in
@@ -236,10 +309,10 @@ def _create_windows_from_events(
         # window size is trial size
         if window_size_samples is None:
             window_size_samples = stops[0] + trial_stop_offset_samples - (
-                onsets[0] + trial_start_offset_samples)
+                    onsets[0] + trial_start_offset_samples)
             window_stride_samples = window_size_samples
         this_trial_sizes = (stops + trial_stop_offset_samples) - (
-            onsets + trial_start_offset_samples)
+                onsets + trial_start_offset_samples)
         # Maybe actually this is not necessary?
         # We could also just say we just assume window size=trial size
         # in case not given, without this condition...
@@ -283,7 +356,8 @@ def _create_windows_from_events(
 
     return WindowsDataset(mne_epochs, ds.description)
 
-#Create WindowsDataset from BaseDataset with sliding windows.
+
+# Create WindowsDataset from BaseDataset with sliding windows.
 def _create_fixed_length_windows(
         ds, start_offset_samples, stop_offset_samples, window_size_samples,
         window_stride_samples, drop_last_window, mapping=None, preload=False,
@@ -348,6 +422,8 @@ Compute window start and stop indices.
     end (shifted by stop_offset) separated by stride, as long as window size
     fits into trial.
 """
+
+
 def _compute_window_inds(
         starts, stops, start_offset, stop_offset, size, stride,
         drop_last_window):
@@ -416,6 +492,7 @@ def _compute_window_inds(
 
     return i_trials, i_window_in_trials, window_starts, window_stops
 
+
 #
 def _check_windowing_arguments(
         trial_start_offset_samples, trial_stop_offset_samples,
@@ -438,7 +515,7 @@ def _check_windowing_arguments(
     """
     assert isinstance(trial_start_offset_samples, (int, np.integer))
     assert (isinstance(trial_stop_offset_samples, (int, np.integer)) or
-           (trial_stop_offset_samples is None))
+            (trial_stop_offset_samples is None))
     assert isinstance(window_size_samples, (int, np.integer, type(None)))
     assert isinstance(window_stride_samples, (int, np.integer, type(None)))
     assert (window_size_samples is None) == (window_stride_samples is None)
