@@ -29,11 +29,11 @@ def _create_description(description):
             raise ValueError(f"'{description}' has to be either a "
                              f"pandas.Series or a dict.")
     return description
-
+0
 
 def fetch_data_description(data):
     """
-    Fetch data description and organize it.
+    Extract description and
 
     Args:
         data (dict):
@@ -138,11 +138,9 @@ class WindowsDataset(BaseDataset):
         On-the-fly transform applied to a window before it is returned.
     """
 
-    def __init__(self, windows, description=None, transform=None):
+    def __init__(self, windows, raw, description=None, transform=None):
+        super().__init__(raw, description, transform)
         self.windows = windows
-        self.description = _create_description(description)
-        self.transform = transform
-
         self.y = self.windows.metadata.loc[:, 'target'].to_numpy()
         self.crop_inds = self.windows.metadata.loc[
                          :, ['i_window_in_trial', 'i_start_in_trial',

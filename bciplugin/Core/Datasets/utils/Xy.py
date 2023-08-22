@@ -1,9 +1,10 @@
-import torch
-from torch.utils.data import DataLoader
+import logging
+
+import mne
 import numpy as np
 import pandas as pd
-import logging
-import mne
+import torch
+from torch.utils.data import DataLoader
 
 from bciplugin.Core.Datasets.base import BaseDataset, BaseConcatDataset
 from bciplugin.Core.Datasets.utils.windowers import create_fixed_length_windows
@@ -44,11 +45,11 @@ def x_from_dataset(dataset, shuffle=False):
         torch.Tensor:
             Input data.
     """
-    Data = next(iter(DataLoader(dataset, batch_size=len(dataset), shuffle=shuffle)))
+    data = next(iter(DataLoader(dataset, batch_size=len(dataset), shuffle=shuffle)))
     try:
-        return Data[0].to(dtype=torch.float32)
+        return data[0].to(dtype=torch.float32)
     except:
-        return Data[0]
+        return data[0]
 
 
 def x_y_embedding_from_dataset(dataset, shuffle=False):
