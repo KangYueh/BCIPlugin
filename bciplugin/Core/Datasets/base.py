@@ -115,7 +115,7 @@ class BaseDataset(Dataset):
 
 
 class WindowsDataset(BaseDataset):
-    """Returns windows from an mne.Epochs object along with a target.
+    """ Returns windows from an mne.Epochs object along with a target.
 
     Dataset which serves windows from an mne.Epochs object along with their
     target and additional information. The `metadata` attribute of the Epochs
