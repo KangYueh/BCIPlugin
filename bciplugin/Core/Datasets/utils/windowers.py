@@ -7,7 +7,7 @@ import mne
 import pandas as pd
 from joblib import Parallel, delayed
 import logging
-from bciplugin.Core.Datasets.base import WindowsDataset, BaseConcatDataset, BaseDataset
+from bciplugin.Core.Datasets.base import WindowsDataset, BaseConcatDataset, RawDataset
 
 log = logging.getLogger(__name__)
 
@@ -57,8 +57,8 @@ def create_windows_from_x_y(
         n_samples_per_x.append(x.shape[1])
         info = mne.create_info(ch_names=ch_names, sfreq=sfreq)
         raw = mne.io.RawArray(x, info)
-        base_dataset = BaseDataset(raw, pd.Series({"target": target}),
-                                   target_name="target")
+        base_dataset = RawDataset(raw, pd.Series({"target": target}),
+                                  target_name="target")
         base_datasets.append(base_dataset)
     base_datasets = BaseConcatDataset(base_datasets)
 
@@ -261,7 +261,7 @@ def _create_windows_from_events(
 
     Parameters
     ----------
-    ds : BaseDataset
+    ds : RawDataset
         Dataset containing continuous data and description.
     infer_mapping : bool
         If True, extract all events from all datasets and map them to
@@ -367,7 +367,7 @@ def _create_fixed_length_windows(
 
     Parameters
     ----------
-    ds : BaseDataset
+    ds : RawDataset
         Dataset containing continuous data and description.
 
     See `create_fixed_length_windows` for description of other parameters.

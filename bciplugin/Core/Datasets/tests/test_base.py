@@ -1,27 +1,7 @@
 from os import path as op
-from pathlib import Path
-
-import numpy as np
-from numpy.polynomial import legendre
-from numpy.testing import (
-    assert_allclose,
-    assert_array_equal,
-    assert_equal,
-    assert_array_almost_equal,
-)
-from scipy.interpolate import interp1d
-
-import pytest
-
 import mne
-from mne.surface import get_meg_helmet_surf, get_head_surf
-from mne.datasets import testing
-from mne import read_evokeds, pick_types, make_fixed_length_events, Epochs
-from mne.io import read_raw_fif
-
-
 from bciplugin.Core.Datasets.base import _create_description
-
+import pytest
 
 def test_create_description():
     """Test the creation of the description file."""
@@ -39,6 +19,39 @@ def test_create_description():
 
     # test the pandas.Series type
     import pandas as pd
+
     description = pd.Series({"Name": "Test", "Description": "This is a test"})
     des = _create_description(description)
     print(des)
+
+
+import os
+
+
+def _walk_through(folder_path):
+    "walk through the .set file in folder_path"
+    if not op.isdir(folder_path):
+        raise NotADirectoryError(f"{folder_path} is not a directory")
+
+    for root, dirs, files in os.walk(folder_path):
+        for file in files:
+            if file.endswith(".set"):
+                yield os.path.join(root, file)
+
+
+def test_window_dataset():
+    """test WindowsDataset class"""
+    # read .set file from directory EEGLABDIR
+    from manifest import EEGLABDIR
+    from bciplugin.Core.Datasets.base import WindowsDataset
+
+    for file in _walk_through(EEGLABDIR):
+        print("--------processing file %s" % file)
+        epochs = mne.io.read_epochs_eeglab(file)
+        dataset = WindowsDataset(epochs)
+        import torch
+        dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=True)
+        for batch in dataloader:
+            print(batch)
+            break
+        break

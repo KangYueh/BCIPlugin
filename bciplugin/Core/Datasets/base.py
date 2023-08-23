@@ -59,7 +59,7 @@ def fetch_data_description(data):
     return raws, description
 
 
-class BaseDataset(Dataset):
+class RawDataset(Dataset):
     """Returns samples from an mne.io.Raw object along with a target.
 
     Dataset which serves samples from an mne.io.Raw object along with a target.
@@ -114,7 +114,7 @@ class BaseDataset(Dataset):
         self._transform = value
 
 
-class WindowsDataset(BaseDataset):
+class WindowsDataset(Dataset):
     """ Returns windows from an mne.Epochs object along with a target.
 
     Dataset which serves windows from an mne.Epochs object along with their
@@ -138,9 +138,10 @@ class WindowsDataset(BaseDataset):
         On-the-fly transform applied to a window before it is returned.
     """
 
-    def __init__(self, windows, raw, description=None, transform=None):
-        super().__init__(raw, description, transform)
+    def __init__(self, windows, description=None, transform=None):
         self.windows = windows
+        self.description = _create_description(description)
+        self.transform = transform
         self.y = self.windows.metadata.loc[:, 'target'].to_numpy()
         self.crop_inds = self.windows.metadata.loc[
                          :, ['i_window_in_trial', 'i_start_in_trial',

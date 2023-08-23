@@ -1,4 +1,4 @@
-from bciplugin.Core.Datasets.base import BaseConcatDataset, fetch_data_description, BaseDataset
+from bciplugin.Core.Datasets.base import BaseConcatDataset, fetch_data_description, RawDataset
 
 
 class CustomDataset(BaseConcatDataset):
@@ -39,5 +39,5 @@ class CustomDataset(BaseConcatDataset):
             all_base_ds = []
             raws, description = fetch_data_description(data)
             for raw, (_, row) in zip(raws, description.iterrows()):
-                all_base_ds.append(BaseDataset(raw, row))
+                all_base_ds.append(RawDataset(raw, row))
             BaseConcatDataset.__init__(self, all_base_ds)

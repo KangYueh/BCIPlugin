@@ -6,7 +6,7 @@ import requests
 import pandas as pd
 from scipy.io import loadmat
 
-from bciplugin.Core.Datasets.base import BaseConcatDataset, BaseDataset
+from bciplugin.Core.Datasets.base import BaseConcatDataset, RawDataset
 from manifest import BCIC_dir
 
 
@@ -252,7 +252,7 @@ class BCICompetition3_3a(BaseConcatDataset):
 
         raws, description = fetch_data_with_BCIC(data)
 
-        all_base_ds = [BaseDataset(raw, row)
+        all_base_ds = [RawDataset(raw, row)
                        for raw, (_, row) in zip(raws, description.iterrows())]
         super(BCICompetition3_3a, self).__init__(all_base_ds)
 
@@ -313,7 +313,7 @@ class BCICompetition3_3b(BaseConcatDataset):
 
         raws, description = fetch_data_with_BCIC(data)
 
-        all_base_ds = [BaseDataset(raw, row)
+        all_base_ds = [RawDataset(raw, row)
                        for raw, (_, row) in zip(raws, description.iterrows())]
         super(BCICompetition3_3b, self).__init__(all_base_ds)
 
@@ -365,6 +365,6 @@ class BCICompetition3_4a(BaseConcatDataset):
         raws, description = fetch_data_with_BCIC(data)
         self.fs = sfreq
 
-        all_base_ds = [BaseDataset(raw, row)
+        all_base_ds = [RawDataset(raw, row)
                        for raw, (_, row) in zip(raws, description.iterrows())]
         super(BCICompetition3_4a, self).__init__(all_base_ds)

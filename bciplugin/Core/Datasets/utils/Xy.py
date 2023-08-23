@@ -1,14 +1,14 @@
 import torch
 from torch.utils.data import DataLoader
 
-from bciplugin.Core.Datasets.base import BaseDataset, BaseConcatDataset
+from bciplugin.Core.Datasets.base import RawDataset, BaseConcatDataset
 
 def x_y_from_dataset(dataset, shuffle=False):
     """
     Extract input data and target labels from a dataset.
 
     Parameters:
-        dataset (BaseDataset):
+        dataset (RawDataset):
             The dataset containing data and labels.
         shuffle (bool):
             Whether to shuffle the data when loading.
@@ -29,7 +29,7 @@ def x_from_dataset(dataset, shuffle=False):
     Extract input data from a dataset.
 
     Parameters:
-        dataset (BaseDataset):
+        dataset (RawDataset):
             The dataset containing data.
         shuffle (bool):
             Whether to shuffle the data when loading.
@@ -50,7 +50,7 @@ def x_y_embedding_from_dataset(dataset, shuffle=False):
     Extract input data, target labels, and embedding data from a dataset.
 
     Parameters:
-        dataset (BaseDataset):
+        dataset (RawDataset):
             The dataset containing data, labels, and embeddings.
         shuffle (bool):
             Whether to shuffle the data when loading.
@@ -71,7 +71,7 @@ def x_y_id_from_dataset(dataset, shuffle=False):
     Extract input data, target labels, and ID information from a dataset.
 
     Parameters:
-        dataset (BaseDataset):
+        dataset (RawDataset):
             The dataset containing data, labels, and IDs.
         shuffle (bool):
             Whether to shuffle the data when loading.

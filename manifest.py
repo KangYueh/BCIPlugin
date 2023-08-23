@@ -1,8 +1,14 @@
 import mne
+import os
 
-BCIC_dir = ".\\test_data\\BCICdatasets"
-mne_path = ".\\test_data\\mne_data"
-eeglab_dir = ".\\test_data\\eeglab_data"
+current_file_path = os.path.abspath(__file__)
+current_dir_path = os.path.dirname(current_file_path)
+
+BCIC_dir = current_dir_path+"\\test_data\\BCICdatasets"
+mne_path = current_dir_path+"\\test_data\\mne_data"
+EEGLABDIR = current_dir_path+"\\test_data\\eeglab_data"
+
+
 
 mne.set_config("MNE_DATA", mne_path)
 mne.set_config("MNE_DATASETS_ALEXEEG_PATH", mne_path)
