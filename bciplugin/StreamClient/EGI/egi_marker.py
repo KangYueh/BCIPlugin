@@ -1,4 +1,4 @@
-from egi_pynetstation import NetStation
+from egi_pynetstation.NetStation import NetStation
 
 # Set an IP address for the computer running NetStation as an IPv4 string
 IP_ns = '10.10.10.42'

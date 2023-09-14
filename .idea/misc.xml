@@ -4,8 +4,11 @@
     <option name="enabledOnReformat" value="true" />
     <option name="sdkUUID" value="5186da06-e6eb-4880-a7eb-0db20190f4de" />
   </component>
-  <component name="ProjectRootManager" version="2" project-jdk-name="BCIPlugin" project-jdk-type="Python SDK" />
+  <component name="ProjectRootManager" version="2" project-jdk-name="mne" project-jdk-type="Python SDK" />
   <component name="PyPackaging">
     <option name="earlyReleasesAsUpgrades" value="true" />
+  </component>
+  <component name="PythonCompatibilityInspectionAdvertiser">
+    <option name="version" value="3" />
   </component>
 </project>
