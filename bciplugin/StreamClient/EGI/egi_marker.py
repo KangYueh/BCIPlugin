@@ -1,3 +1,8 @@
+# step1：首先连接局域网，并设置IP地址为10.10.10.X，X为任意100~255
+# step2：打开NetStation软件，连接好，等待连接
+# step3：运行脚本
+
+
 from egi_pynetstation.NetStation import NetStation
 
 # Set an IP address for the computer running NetStation as an IPv4 string
@@ -22,3 +27,5 @@ ns.send_event(event_type="STIM", data=my_data)
 ns.end_rec()
 # You'll want to disconnect the amplifier when your program is done
 ns.disconnect()
+
+
